@@ -1,0 +1,31 @@
+
+.home-body{
+    height: 300px;
+    width: 900px;
+    margin: auto;
+    margin-top:180px;
+}
+
+
+.btn-signin{
+    height: 40px;
+    width: 150px;
+    background-color: #97b9fc;
+    color: black;
+}
+
+.btn-signin:hover{
+    background: #2026d2;
+    color: white;
+}
+
+.btn-register{
+    height: 40px;
+    width: 150px;
+    background-color: #97b9fc;
+    color: black;
+}
+.btn-register:hover{
+    background-color: #2026d2;
+    color: white;
+}

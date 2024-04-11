@@ -1,0 +1,32 @@
+.btn-post {
+  height: 40px;
+  width: 150px;
+  background-color: #97b9fc;
+  color: black;
+  margin-left: 32%;
+}
+
+.btn-post:hover {
+  background: #2026d2;
+  color: white;
+}
+
+.image-upload-label-create {
+  margin: 5px;
+  height: 100px;
+  width: 100px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.add-image-modal {
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+}
+
+.uploaded-image-create {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}

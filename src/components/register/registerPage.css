@@ -1,0 +1,11 @@
+.btn-reg{
+    height: 40px;
+    width: 100px;
+    background-color: #97b9fc;
+    color: black;
+}
+
+.btn-reg:hover{
+    background: #2026d2;
+    color: white;
+}

@@ -1,0 +1,10 @@
+#dropdown-custom{
+    background-color: #97b9fc;
+    color: black;
+    margin: 10px auto;
+}
+
+#dropdown-custom:hover{
+    background: #2026d2;
+    color: white;
+}

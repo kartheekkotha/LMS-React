@@ -1,0 +1,16 @@
+.bg-custom{
+    background-color: #2026d2;
+}
+
+.nav-link{
+    color: #8c90e9;
+}
+
+.nav-link:hover{
+    color: white;
+}
+.lostandfound{
+    height: 30px;
+    width: 30px;
+    color: white;
+}

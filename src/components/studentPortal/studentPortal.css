@@ -1,0 +1,21 @@
+.btn-sub,.btn-comp{
+    height: 40px;
+    width: 150px;
+    background-color: #97b9fc;
+    color: black;
+    margin-top: 20px;
+}
+
+.btn-sub:hover{
+    background: #2026d2;
+    color: white;
+}
+
+.btn-comp{
+    margin-left: 120px;
+}
+
+.btn-comp:hover{
+    background: #2026d2;
+    color: white;
+}

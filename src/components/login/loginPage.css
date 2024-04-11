@@ -1,0 +1,11 @@
+.btn-login{
+    height: 40px;
+    width: 100px;
+    background-color: #97b9fc;
+    color: black;
+}
+
+.btn-login:hover{
+    background: #2026d2;
+    color: white;
+}
