@@ -20,10 +20,11 @@ const App = () =>{
   const [userRole, setUserRole] = useState("");
 
 
-  const handleLogin = (userId , role) => {
+  const handleLogin = (userId , userRole) => {
+    console.log("User ID:", userId);
     setIsLoggedIn(true);
-    setUserId(setUserId);
-    setUserRole(role);
+    setUserId(userId);
+    setUserRole(userRole);
   };
 
   const handleLogout = () => {

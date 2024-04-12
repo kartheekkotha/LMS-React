@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import "./navigationBar.css";
 
 const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
+  console.log("User Role:", userRole);
+  console.log("User ID:", userId);
+  console.log("Is logged in:", isLoggedIn);
   return (
     <div>
       <nav

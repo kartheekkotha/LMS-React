@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./loginPage.css";
+import { Link } from "react-router-dom";
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
@@ -22,10 +23,10 @@ const Login = ({ onLogin }) => {
   
       if (response.ok) {
         const data = await response.json();
-        console.log("Login successful" , data );
+        console.log("Login successful"  );
         toast.success("Login successful");
-        onLogin(email, data.role);
-        window.location.href = "/"; 
+        onLogin(email, role);
+        document.getElementById("homeLink").click(); 
       } else {
         console.error("Login failed");
   
@@ -95,6 +96,7 @@ const Login = ({ onLogin }) => {
           Login
         </button>
       </form>
+      <Link to="/" style={{ display: "none" }} id="homeLink" />
     </div>
   );
 };
