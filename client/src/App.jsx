@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React from "react";
+import React, { useState } from "react";
 import StudentPortal from "./components/studentPortal/studentPortal";
 import Login from "./components/login/loginPage";
 import NavigationBar from "./components/navBar/navigationBar";
@@ -14,16 +14,40 @@ import Announcements from "./components/adminAnnouncements";
 import Complaints from "./components/studentComplaints";
 
 
-const App = () => (
+const App = () =>{
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [userRole, setUserRole] = useState("");
+
+
+  const handleLogin = (userId , role) => {
+    setIsLoggedIn(true);
+    setUserId(setUserId);
+    setUserRole(role);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserId("");
+    setUserRole("");
+  };
+
+
+ return (
   <div>
     <ToastContainer />
     <Router>
       <div>
-        <NavigationBar />
+        <NavigationBar 
+          isLoggedIn={isLoggedIn}
+          userId={userId}
+          userRole={userRole}
+          onLogout={handleLogout}
+        />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/portal" element={<StudentPortal />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/portal" element={<StudentPortal userId={userId}/>} />
+          <Route path="/login" element={<Login  onLogin={handleLogin} />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<AdminPortal />} />
           <Route path="/lostfound" element={<LostAndFound />} />
@@ -33,6 +57,6 @@ const App = () => (
       </div>
     </Router>
   </div>
-);
+)};
 
 export default App;

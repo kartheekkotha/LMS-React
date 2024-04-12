@@ -1,52 +1,39 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./loginPage.css";
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student"); // Default role is student
   const backendURL = process.env.REACT_APP_BACKEND_URL;
+
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:3001/login", {
+      const response = await fetch(`${backendURL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
       });
-
+      console.log("response", response);
+  
       if (response.ok) {
-        console.log("Login successful");
-
-        // Show a success notification
+        const data = await response.json();
+        console.log("Login successful" , data );
         toast.success("Login successful");
-
-        // Redirect user based on role
-        if (role === "student") {
-          // Redirect to student dashboard
-          window.location.href = "/studentPortal";
-        } else if (role === "staff") {
-          // Redirect to staff dashboard
-          window.location.href = "/adminPage";
-        }
+        onLogin(email, data.role);
+        window.location.href = "/"; 
       } else {
         console.error("Login failed");
-
-        // Show an error notification
+  
         toast.error("Login failed");
-
-        // Handle failed login, e.g., show an error message to the user
       }
     } catch (error) {
       console.error("Error during login:", error);
-
-      // Show a network error notification
       toast.error("Network error during login");
-
-      // Handle network errors or other issues
     }
   };
 
@@ -58,7 +45,7 @@ const Login = () => {
       </header>
       <h2>Login</h2>
       <form>
-      <div className="mb-3">
+        <div className="mb-3">
           <label htmlFor="role" className="form-label">
             Role
           </label>
@@ -99,8 +86,12 @@ const Login = () => {
             style={{ maxWidth: "200px" }}
           />
         </div>
-        
-        <button type="button" className="btn btn-login" onClick={handleLogin}>
+
+        <button
+          type="button"
+          className="btn btn-login"
+          onClick={handleLogin}
+        >
           Login
         </button>
       </form>

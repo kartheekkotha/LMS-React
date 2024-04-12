@@ -1,17 +1,8 @@
-import { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import "./navigationBar.css";
 
-const NavigationBar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userRole, setUserRole] = useState(""); // 'student' or 'staff'
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserRole("");
-    // Add any additional logout logic here, such as clearing session data
-  };
-
+const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
   return (
     <div>
       <nav
@@ -20,7 +11,7 @@ const NavigationBar = () => {
       >
         <Link className="navbar-brand" to="/">
           <h1 style={{ fontSize: "20px", marginLeft: "25%", marginTop: "5px" }}>
-            EvokeEsteem
+            Laundry Management
           </h1>
         </Link>
         <button
@@ -40,12 +31,12 @@ const NavigationBar = () => {
               // Show About and Login links if the user is not logged in
               <>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/about">
-                    About
+                  <Link className="nav-link" to="/">
+                    Home
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/home">
+                  <Link className="nav-link" to="/login">
                     Login
                   </Link>
                 </li>
@@ -72,8 +63,8 @@ const NavigationBar = () => {
                       </Link>
                     </li>
                   </>
-                ) : (
-                  // Navigation items for staff
+                ) : userRole === "admin" ? (
+                  // Navigation items for admin
                   <>
                     <li className="nav-item">
                       <Link className="nav-link" to="/admin">
@@ -91,7 +82,7 @@ const NavigationBar = () => {
                       </Link>
                     </li>
                   </>
-                )}
+                ) : null}
               </>
             )}
           </ul>
@@ -117,7 +108,7 @@ const NavigationBar = () => {
                   className="dropdown-menu dropdown-menu-right"
                   aria-labelledby="userDropdown"
                 >
-                  <button className="dropdown-item" onClick={handleLogout}>
+                  <button className="dropdown-item" onClick={onLogout}>
                     Logout
                   </button>
                 </div>
