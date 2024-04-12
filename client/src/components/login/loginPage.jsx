@@ -7,7 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student"); // Default role is student
-
+  const backendURL = process.env.REACT_APP_BACKEND_URL;
   const handleLogin = async () => {
     try {
       const response = await fetch("http://localhost:3001/login", {
