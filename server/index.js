@@ -10,7 +10,13 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
-  res.send("Welcome to my API");
+  connection.connect((err) => {
+    if (err) {
+      res.send('Error connecting to MySQL database:', err);
+      return;
+    }
+    res.send('Welcome to API Connected to MySQL database');
+  });
 });
 
 app.listen(4000, () => {
