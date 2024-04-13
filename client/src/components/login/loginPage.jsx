@@ -13,7 +13,7 @@ const Login = ({ onLogin }) => {
   const handleLogin = async () => {
     try {
       console.log(backendURL)
-      const response = await fetch(`https://lms-react-server.vercel.app/login`, {
+      const response = await fetch(`${backendURL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
