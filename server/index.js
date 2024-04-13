@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
-const bcrypt = require("bcrypt");
 const app = express();
 require('dotenv').config();
 
@@ -45,9 +44,17 @@ connection.connect((err) => {
 app.post("/login", (req, res) => {
   console.log("Login request received");
   const { email, password, role } = req.body;
+  // Query the database to fetch user details based on role
+  let query = "";
+  if (role === "student") {
+    query = `SELECT * FROM Student WHERE Email = ? AND Password_Hash = ?`;
+  } else if (role === "staff") {
+    query = `SELECT * FROM Admin WHERE Email = ? AND Password_Hash = ?`;
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid role' });
+    return;
+  }
 
-  // Query the database to fetch user details
-  const query = `SELECT * FROM Student WHERE Email = ? AND Password_Hash = ?`;
   connection.query(query, [email, password], (err, results) => {
     if (err) {
       console.error('Error querying database:', err);
@@ -56,14 +63,12 @@ app.post("/login", (req, res) => {
     }
 
     if (results.length === 0) {
-      // If user not found or password does not match, send an error response
+      // If user not found or password is incorrect, send an error response
       res.status(401).json({ success: false, message: 'Incorrect email or password' });
       return;
     }
 
-    const user = results[0];
-
     // If login successful, return user details and role
-    res.json({ success: true, role: user.role });
+    res.json({ success: true, role: role });
   });
 });

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Dropdown from 'react-bootstrap/Dropdown'; // Import Dropdown from react-bootstrap
 import "./navigationBar.css";
 
 const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
@@ -93,26 +94,14 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
             )}
           </ul>
           {isLoggedIn && (
-            <div className="dropdown">
-              <button
-                className="btn btn-secondary dropdown-toggle"
-                type="button"
-                id="userDropdown"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="true"
-              >
+            <Dropdown>
+              <Dropdown.Toggle variant="secondary" id="userDropdown">
                 Welcome, {getUsername(userId)}
-              </button>
-              <div
-                className="dropdown-menu dropdown-menu-right"
-                aria-labelledby="userDropdown"
-              >
-                <button className="dropdown-item" onClick={onLogout}>
-                  Logout
-                </button>
-              </div>
-            </div>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={onLogout}>Logout</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           )}
         </div>
       </nav>

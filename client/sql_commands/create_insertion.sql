@@ -1,20 +1,11 @@
--- Creating Hostel Table
+-- Hostel Table
 CREATE TABLE Hostel (
     Hostel_ID INT PRIMARY KEY,
     Warden_Name VARCHAR(255),
     Contact_No VARCHAR(20)
 );
 
--- Creating Laundry_Bag Table
-CREATE TABLE Laundry_Bag (
-    Bag_ID INT PRIMARY KEY,
-    No_of_clothes INT,
-    Date_given DATE,
-    Received_date DATE,
-    Return_date DATE
-);
-
--- Creating Student Table with Password Hash
+-- Student Table
 CREATE TABLE Student (
     Roll_No INT PRIMARY KEY,
     Name VARCHAR(255),
@@ -23,12 +14,41 @@ CREATE TABLE Student (
     Email VARCHAR(255),
     College_ID INT,
     Phone_No VARCHAR(20),
-    Bag_ID INT,
     Image_URL VARCHAR(255),
-    Password_Hash VARCHAR(255), -- New column for hashed password
-    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID),
-    FOREIGN KEY (Bag_ID) REFERENCES Laundry_Bag(Bag_ID) -- Adding foreign key constraint for Bag_ID
+    Password_Hash VARCHAR(255),
+    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID)
 );
+
+-- Admin Table
+CREATE TABLE Admin (
+    Email VARCHAR(255) PRIMARY KEY,
+    Name VARCHAR(255),
+    Phone_No VARCHAR(20),
+    Password_Hash VARCHAR(255)
+);
+
+-- Laundry_Assignment Table
+CREATE TABLE Laundry_Assignment (
+    Bag_ID INT PRIMARY KEY,
+    Roll_No INT,
+    Assigned_Date DATE,
+    FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No) 
+);
+
+-- Laundry_Instance Table
+CREATE TABLE Laundry_Instance (
+    Instance_ID INT PRIMARY KEY,
+    Bag_ID INT ,
+    Clothes_Given INT,
+    Received_Date DATE,
+    Return_Date DATE,
+    Assigned_Hostel_ID INT,
+    Admin_Email VARCHAR(255),
+    FOREIGN KEY (Bag_ID) REFERENCES Laundry_Assignment(Bag_ID),  
+    FOREIGN KEY (Assigned_Hostel_ID) REFERENCES Hostel(Hostel_ID),  
+    FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)  
+);
+
 
 
 -- Creating LostAndFound Table
@@ -39,8 +59,10 @@ CREATE TABLE LostAndFound (
     Hostel_ID INT,
     Room_No INT,
     Lost_Found ENUM('Lost', 'Found'),
-    Image_URL VARCHAR(255), -- New attribute for image URL
-    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID)
+    Image_URL VARCHAR(255),
+    Roll_No INT, -- Foreign key reference to the Student table
+    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID),
+    FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No)
 );
 
 -- Creating AdminMessage Table
@@ -49,8 +71,10 @@ CREATE TABLE AdminMessage (
     Date DATE,
     Description VARCHAR(255),
     Hostel_ID INT,
-    Image_URL VARCHAR(255), -- New attribute for image URL
-    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID)
+    Admin_Email VARCHAR(255),
+    Image_URL VARCHAR(255),
+    FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID),
+    FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)
 );
 
 -- Creating StudentComplaint Table
@@ -63,33 +87,42 @@ CREATE TABLE StudentComplaint (
     FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No)
 );
 
-
--- Inserting sample data into Hostel table
+-- Dummy data for Hostel Table
 INSERT INTO Hostel (Hostel_ID, Warden_Name, Contact_No) VALUES
 (1, 'John Doe', '123-456-7890'),
 (2, 'Jane Smith', '987-654-3210');
 
--- Inserting sample data into Laundry_Bag table
-INSERT INTO Laundry_Bag (Bag_ID, No_of_clothes, Date_given, Received_date, Return_date) VALUES
-(1, 5, '2024-04-10', '2024-04-11', '2024-04-12'),
-(2, 10, '2024-04-11', '2024-04-12', '2024-04-13');
+-- Dummy data for Student Table
+INSERT INTO Student (Roll_No, Name, Hostel_ID, Room_No, Email, College_ID, Phone_No, Image_URL, Password_Hash) VALUES
+(1001, 'Alice Johnson', 1, 101, 'alice@example.com', 123456, '555-123-4567', 'http://example.com/alice.jpg', 'hashed_password_1'),
+(1002, 'Bob Smith', 1, 102, 'bob@example.com', 654321, '555-987-6543', 'http://example.com/bob.jpg', 'hashed_password_2');
 
--- Inserting sample data into Student table
-INSERT INTO Student (Roll_No, Name, Hostel_ID, Room_No, Email, College_ID, Phone_No, Bag_ID, Image_URL, Password_Hash) VALUES
-(1, 'Alice', 1, 101, 'alice@example.com', 1001, '987-654-3210', 1, 'https://example.com/images/alice.jpg', 'hashed_password_for_alice'),
-(2, 'Bob', 2, 201, 'bob@example.com', 1002, '123-456-7890', 2, 'https://example.com/images/bob.jpg', 'hashed_password_for_bob');
+-- Dummy data for Admin Table
+INSERT INTO Admin (Email, Name, Phone_No, Password_Hash) VALUES
+('admin1@example.com', 'Admin One', '999-888-7777', 'admin1_password_hash'),
+('admin2@example.com', 'Admin Two', '777-888-9999', 'admin2_password_hash');
 
--- Inserting sample data into LostAndFound table
-INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL) VALUES
-('2024-04-10', 'Found a wallet', '555-555-5555', 1, 101, 'Found', 'https://example.com/images/wallet.jpg'),
-('2024-04-11', 'Lost phone', '666-666-6666', 2, 201, 'Lost', 'https://example.com/images/phone.jpg');
+-- Dummy data for Laundry_Assignment Table
+INSERT INTO Laundry_Assignment (Bag_ID, Roll_No, Assigned_Date) VALUES
+(1, 1001, '2024-04-01'),
+(2, 1002, '2024-04-02');
 
--- Inserting sample data into AdminMessage table
-INSERT INTO AdminMessage (Message_ID, Date, Description, Hostel_ID, Image_URL) VALUES
-(1, '2024-04-10', 'Important notice about upcoming maintenance', 1, 'https://example.com/images/maintenance.jpg'),
-(2, '2024-04-11', 'Reminder: Meeting tomorrow at 10 AM', 2, 'https://example.com/images/meeting.jpg');
+-- Dummy data for Laundry_Instance Table
+INSERT INTO Laundry_Instance (Instance_ID, Bag_ID, Clothes_Given, Received_Date, Return_Date, Assigned_Hostel_ID, Admin_Email) VALUES
+(1, 1, 5, '2024-04-01', '2024-04-02', 1, 'admin1@example.com'),
+(2, 2, 10, '2024-04-02', '2024-04-03', 1, 'admin2@example.com');
 
--- Inserting sample data into StudentComplaint table
+-- Dummy data for LostAndFound Table
+INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Roll_No) VALUES
+('2024-04-01', 'Lost keys', '555-111-2222', 1, 101, 'Lost', 1001),
+('2024-04-02', 'Found wallet', '555-333-4444', 1, 102, 'Found', 1002);
+
+-- Dummy data for AdminMessage Table
+INSERT INTO AdminMessage (Message_ID, Date, Description, Hostel_ID, Admin_Email, Image_URL) VALUES
+(1, '2024-04-01', 'Important announcement', 1, 'admin1@example.com', 'http://example.com/announcement1.jpg'),
+(2, '2024-04-02', 'Reminder: Laundry pickup', 1, 'admin2@example.com', 'http://example.com/announcement2.jpg');
+
+-- Dummy data for StudentComplaint Table
 INSERT INTO StudentComplaint (Complaint_ID, Date, Description, Roll_No, Image_URL) VALUES
-(1, '2024-04-10', 'clothes arent dry ', 1, 'https://example.com/images/complaint.jpg'),
-(2, '2024-04-11', 'not folded properly', 2, 'https://example.com/images/ac.jpg');
+(1, '2024-04-01', 'Broken washing machine', 1001, 'http://example.com/complaint1.jpg'),
+(2, '2024-04-02', 'Dryer not working', 1002, 'http://example.com/complaint2.jpg');
