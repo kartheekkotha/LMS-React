@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import "./navigationBar.css";
 
 const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
-  console.log("User Role:", userRole);
-  console.log("User ID:", userId);
-  console.log("Is logged in:", isLoggedIn);
+  // Function to get the username from the email
+  const getUsername = (email) => {
+    const username = email.split("@")[0];
+    return username;
+  };
+
   return (
     <div>
       <nav
@@ -21,6 +24,10 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
           className="navbar-toggler"
           type="button"
           aria-label="Toggle navigation"
+          data-bs-toggle="collapse"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          data-bs-target="#navbarNav"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
@@ -29,9 +36,8 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
           id="navbarNav"
           style={{ marginLeft: "45%" }}
         >
-          <ul className="navbar-nav" style={{ fontSize: "17px" }}>
+          <ul className="navbar-nav me-auto" style={{ fontSize: "17px" }}>
             {!isLoggedIn ? (
-              // Show About and Login links if the user is not logged in
               <>
                 <li className="nav-item">
                   <Link className="nav-link" to="/">
@@ -45,10 +51,8 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
                 </li>
               </>
             ) : (
-              // Show different navigation items based on user role
               <>
                 {userRole === "student" ? (
-                  // Navigation items for student
                   <>
                     <li className="nav-item">
                       <Link className="nav-link" to="/portal">
@@ -67,7 +71,6 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
                     </li>
                   </>
                 ) : userRole === "admin" ? (
-                  // Navigation items for admin
                   <>
                     <li className="nav-item">
                       <Link className="nav-link" to="/admin">
@@ -90,31 +93,24 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
             )}
           </ul>
           {isLoggedIn && (
-            // User icon with logout option on the right side
-            <div className="user-icon">
-              <div className="dropdown">
-                <button
-                  className="btn btn-secondary dropdown-toggle"
-                  type="button"
-                  id="userDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <img
-                    src="user-icon.png" // Add your user icon image URL here
-                    alt="User Icon"
-                    className="user-icon-img"
-                  />
+            <div className="dropdown">
+              <button
+                className="btn btn-secondary dropdown-toggle"
+                type="button"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="true"
+              >
+                Welcome, {getUsername(userId)}
+              </button>
+              <div
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="userDropdown"
+              >
+                <button className="dropdown-item" onClick={onLogout}>
+                  Logout
                 </button>
-                <div
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="userDropdown"
-                >
-                  <button className="dropdown-item" onClick={onLogout}>
-                    Logout
-                  </button>
-                </div>
               </div>
             </div>
           )}
