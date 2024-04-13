@@ -9,9 +9,12 @@ require('dotenv').config();
 app.use(cors());
 app.use(bodyParser.json());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to my API");
+});
 
-app.listen(5000, () => {
-    console.log("Server is running on port 5000");
+app.listen(4000, () => {
+    console.log("Server is running on port 4000");
 });
 
 const connection = mysql.createConnection({  
