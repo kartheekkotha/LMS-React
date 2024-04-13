@@ -71,7 +71,7 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
                       </Link>
                     </li>
                   </>
-                ) : userRole === "admin" ? (
+                ) : userRole === "staff" ? (
                   <>
                     <li className="nav-item">
                       <Link className="nav-link" to="/admin">

@@ -31,6 +31,7 @@ const App = () =>{
     setIsLoggedIn(false);
     setUserId("");
     setUserRole("");
+    window.location.href = "/";
   };
 
 
