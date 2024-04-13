@@ -13,7 +13,7 @@ const Login = ({ onLogin }) => {
   const handleLogin = async () => {
     try {
       console.log(backendURL)
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/login`, {
+      const response = await fetch(`${backendURL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
