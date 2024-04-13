@@ -8,7 +8,7 @@ const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student"); // Default role is student
-  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
 
   const handleLogin = async () => {
     try {
