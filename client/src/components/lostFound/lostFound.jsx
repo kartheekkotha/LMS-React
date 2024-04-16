@@ -2,39 +2,79 @@ import React, { useState, useEffect } from "react";
 import "./lostFound.css";
 import AddImage from "../../assets/img/add-image.jpeg";
 
-const LostAndFound = () => {
+const LostAndFound = ({ isLoggedIn, userId }) => {
   const [lostItems, setLostItems] = useState([]);
   const [foundItems, setFoundItems] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentItem, setCurrentItem] = useState({
-    type: "", 
+    type: "",
     description: "",
-    image: "",
-    email: "",
+    image: "", // Changed from "image"
+    email: userId,
   });
+  const [studentDetails, setStudentDetails] = useState(null);
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
+
+  // Function to fetch student details
+  const fetchStudentDetails = async () => {
+    if (!isLoggedIn || !userId) return;
+
+    try {
+      const response = await fetch(`${backendURL}/getStudentDetails/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setStudentDetails(data);
+        console.log(data)
+      } else {
+        console.error("Failed to fetch student details");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch student details when component mounts
+    fetchStudentDetails();
+  }, [isLoggedIn, userId]); // Fetch again when isLoggedIn or userId changes
 
   const handleInputChange = (e) => {
     setCurrentItem({ ...currentItem, [e.target.name]: e.target.value });
-    console.log("Image URL:", currentItem.image);
   };
 
   const handlePost = () => {
-    console.log("HandlePost is clicked")
+    // Check if the user is logged in
+    if (!isLoggedIn) {
+      alert("Please log in to post lost or found items.");
+      return;
+    }
+
+    // Check if student details are fetched
+    if (!studentDetails) {
+      console.error("Student details not available.");
+      return;
+    }
     console.log(currentItem)
-    if (!currentItem.description || !currentItem.imageUrl || !currentItem.email) {
+    if (!currentItem.description || !currentItem.image || !currentItem.email) {
       alert("Please fill in description, image upload, and email.");
       return;
     }
 
     const newItem = {
-      ...currentItem,
       date: new Date().toLocaleString(),
+      description: currentItem.description,
+      phNo: studentDetails.Phone_No,
+      hostelId: studentDetails.Hostel_ID,
+      roomNo: studentDetails.Room_No,
+      imageUrl: currentItem.image,
+      rollNo: studentDetails.Roll_No,
+      email: currentItem.email,
     };
 
     const endpoint =
-      currentItem.type === "lost" ? "/postLostItem" : "/postFoundItem";
-
-    fetch(`http://localhost:5000/${endpoint}`, {
+      currentItem.type === "lost" ? "postLostItem" : "postFoundItem";
+    console.log("Posting item:", newItem);
+    fetch(`${backendURL}/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,13 +82,9 @@ const LostAndFound = () => {
       body: JSON.stringify(newItem),
     })
       .then((response) => {
-        console.log("Response is recieved")
-        console.log(response)
         if (response.ok) {
-          console.log("Item posted successfully");
           return response.json();
         } else {
-          console.error("Failed to post item");
           throw new Error("Failed to post item");
         }
       })
@@ -67,23 +103,23 @@ const LostAndFound = () => {
       type: "",
       description: "",
       image: "",
-      email: "",
+      email: userId,
     });
   };
 
   useEffect(() => {
     // Fetch lost items
-    fetch("http://localhost:3001/getLostItems")
+    fetch(`${backendURL}/getLostItems`)
       .then((response) => response.json())
       .then((data) => setLostItems(data))
       .catch((error) => console.error("Error fetching lost items:", error));
 
     // Fetch found items
-    fetch("http://localhost:3001/getFoundItems")
+    fetch(`${backendURL}/getFoundItems`)
       .then((response) => response.json())
       .then((data) => setFoundItems(data))
       .catch((error) => console.error("Error fetching found items:", error));
-  }, []); // Run only once on component mount
+  }, []);
 
   const renderPosts = (items) => {
     return (
@@ -91,7 +127,7 @@ const LostAndFound = () => {
         {items.map((item, index) => (
           <div key={index} className="card mb-3">
             <img
-              src={item.Image}
+              src={item.Image} // Changed from "Image"
               className="card-img-top"
               alt={`Item ${index}`}
             />
@@ -109,7 +145,7 @@ const LostAndFound = () => {
       </div>
     );
   };
-  
+
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -122,7 +158,9 @@ const LostAndFound = () => {
       reader.onload = () => {
         const dataURL = reader.result;
         setSelectedImage(dataURL);
-        setCurrentItem((formData) => ({ ...formData, imageUrl: dataURL }));
+        // Convert image data to Base64 and store it
+        const base64Image = dataURL.split(",")[1];
+        setCurrentItem((formData) => ({ ...formData, image: base64Image }));
       };
       reader.readAsDataURL(file);
     }
@@ -196,14 +234,6 @@ const LostAndFound = () => {
                 )}
               </label>
             </div>
-            {/* <input
-              type="text"
-              className="form-control"
-              id="itemImage"
-              name="image"
-              value={currentItem.image}
-              onChange={handleInputChange}
-            /> */}
           </div>
           <div className="mb-3">
             <label htmlFor="itemEmail">Email:</label>
