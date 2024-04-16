@@ -9,7 +9,6 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
   const [currentItem, setCurrentItem] = useState({
     type: "",
     description: "",
-    image: "", // Changed from "image"
     email: userId,
   });
   const [studentDetails, setStudentDetails] = useState(null);
@@ -24,7 +23,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
       if (response.ok) {
         const data = await response.json();
         setStudentDetails(data);
-        console.log(data)
+        console.log(data);
       } else {
         console.error("Failed to fetch student details");
       }
@@ -42,7 +41,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
     setCurrentItem({ ...currentItem, [e.target.name]: e.target.value });
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     // Check if the user is logged in
     if (!isLoggedIn) {
       alert("Please log in to post lost or found items.");
@@ -54,55 +53,52 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
       console.error("Student details not available.");
       return;
     }
-    console.log(currentItem)
-    if (!currentItem.description || !currentItem.image || !currentItem.email) {
+
+    // Check if all required fields are filled
+    if (!currentItem.description || !selectedImage || !currentItem.email) {
       alert("Please fill in description, image upload, and email.");
       return;
     }
 
-    const newItem = {
-      date: new Date().toLocaleString(),
-      description: currentItem.description,
-      phNo: studentDetails.Phone_No,
-      hostelId: studentDetails.Hostel_ID,
-      roomNo: studentDetails.Room_No,
-      imageUrl: currentItem.image,
-      rollNo: studentDetails.Roll_No,
-      email: currentItem.email,
-    };
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('date', new Date().toLocaleString());
+    formData.append('description', currentItem.description);
+    formData.append('phNo', studentDetails.Phone_No);
+    formData.append('hostelId', studentDetails.Hostel_ID);
+    formData.append('roomNo', studentDetails.Room_No);
+    formData.append('email', currentItem.email);
+    formData.append('image', selectedImage);
+    formData.append('rollNo', studentDetails.Roll_No);
 
-    const endpoint =
-      currentItem.type === "lost" ? "postLostItem" : "postFoundItem";
-    console.log("Posting item:", newItem);
-    fetch(`${backendURL}/${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newItem),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error("Failed to post item");
-        }
-      })
-      .then((data) => {
+    // Determine endpoint based on item type
+    const endpoint = currentItem.type === "lost" ? "postLostItem" : "postFoundItem";
+
+    try {
+      // Send POST request with FormData
+      const response = await fetch(`${backendURL}/${endpoint}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
         if (currentItem.type === "lost") {
           setLostItems([data, ...lostItems]);
         } else {
           setFoundItems([data, ...foundItems]);
         }
-      })
-      .catch((error) => {
-        console.error("Error during item posting:", error);
-      });
+      } else {
+        throw new Error("Failed to post item");
+      }
+    } catch (error) {
+      console.error("Error during item posting:", error);
+    }
 
+    // Reset currentItem state after posting
     setCurrentItem({
       type: "",
       description: "",
-      image: "",
       email: userId,
     });
   };
@@ -122,12 +118,13 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
   }, []);
 
   const renderPosts = (items) => {
+    console.log(items);
     return (
       <div>
         {items.map((item, index) => (
           <div key={index} className="card mb-3">
             <img
-              src={item.Image} // Changed from "Image"
+              src={item.Image_URL} // Changed from "Image"
               className="card-img-top"
               alt={`Item ${index}`}
             />
@@ -145,6 +142,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
       </div>
     );
   };
+  
 
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -157,10 +155,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
       const reader = new FileReader();
       reader.onload = () => {
         const dataURL = reader.result;
-        setSelectedImage(dataURL);
-        // Convert image data to Base64 and store it
-        const base64Image = dataURL.split(",")[1];
-        setCurrentItem((formData) => ({ ...formData, image: base64Image }));
+        setSelectedImage(file);
       };
       reader.readAsDataURL(file);
     }
@@ -220,7 +215,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
               <label htmlFor="fileInput" className="image-upload-label-create">
                 {selectedImage ? (
                   <img
-                    src={selectedImage}
+                    src={URL.createObjectURL(selectedImage)}
                     alt="Uploaded"
                     className="uploaded-image-create"
                   />

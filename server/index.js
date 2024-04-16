@@ -2,11 +2,18 @@ const express = require('express');
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
+const multer = require('multer');
 const app = express();
+const path = require('path'); // Import path module
+
+
 require('dotenv').config();
 
+const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";;
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get("/", (req, res) => {
   connection.connect((err) => {
@@ -209,12 +216,25 @@ app.get('/getComplaints', (req, res) => {
   });
 });
 
-app.post('/postLostItem', (req, res) => {
-  const { date, description, phNo, hostelId, roomNo, imageUrl, rollNo, email} = req.body;
+// Multer configuration for handling file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Destination folder for storing uploaded files
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Generate unique filename
+  }
+});
+const upload = multer({ storage: storage });
 
+// Route for posting lost items with image upload
+app.post('/postLostItem', upload.single('image'), (req, res) => {
+  console.log('Received file:', req.file);
+  const { date, description, phNo, hostelId, roomNo, email , rollNo} = req.body;
+  const imageUrl = req.file.path; // Retrieve uploaded image path
+  console.log('Image URL:', imageUrl);
   const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  console.log("Trying to push data" , req.data);
-  connection.query(sql, [date, description, phNo, hostelId, roomNo, 'Lost', 0, rollNo], (err, result) => {
+  connection.query(sql, [date, description, phNo, hostelId, roomNo, 'Lost', imageUrl, rollNo], (err, result) => {
     if (err) {
       console.error('Error posting lost item:', err);
       res.status(500).send('Internal Server Error');
@@ -224,9 +244,12 @@ app.post('/postLostItem', (req, res) => {
   });
 });
 
-// Endpoint to post a found item
-app.post('/postFoundItem', (req, res) => {
-  const { date, description, phNo, hostelId, roomNo, imageUrl, rollNo, email } = req.body;
+// Endpoint to post a found item with image upload
+app.post('/postFoundItem', upload.single('image'), (req, res) => {
+  console.log('Received file:', req.file);
+  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
+  const imageUrl = req.file.path; // Retrieve uploaded image path
+  console.log('Image URL:', imageUrl);
 
   const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
   connection.query(sql, [date, description, phNo, hostelId, roomNo, 'Found', imageUrl, rollNo], (err, result) => {
@@ -239,31 +262,43 @@ app.post('/postFoundItem', (req, res) => {
   });
 });
 
+
 // Endpoint for fetching lost items
 app.get('/getLostItems', (req, res) => {
-  const sql = 'SELECT * FROM LostAndFound WHERE LostFoundTag = "lost" ORDER BY date desc';
+  const sql = 'SELECT Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No FROM LostAndFound WHERE Lost_Found = "Lost" ORDER BY Date DESC';
   connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching lost items:', err);
       res.status(500).send('Internal Server Error');
     } else {
-      res.json(results);
+      // Modify the results to include full image URLs
+      const itemsWithImageURLs = results.map(item => ({
+        ...item,
+        Image_URL: `${backendBaseURL}/${item.Image_URL}` // Assuming backendBaseURL is the base URL of your server where images are stored
+      }));
+      res.json(itemsWithImageURLs);
     }
   });
 });
 
 // Endpoint for fetching found items
 app.get('/getFoundItems', (req, res) => {
-  const sql = 'SELECT * FROM LostAndFound WHERE LostFoundTag = "found" ORDER BY date desc';
+  const sql = 'SELECT Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No FROM LostAndFound WHERE Lost_Found = "Found" ORDER BY Date DESC';
   connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching found items:', err);
       res.status(500).send('Internal Server Error');
     } else {
-      res.json(results);
+      // Modify the results to include full image URLs
+      const itemsWithImageURLs = results.map(item => ({
+        ...item,
+        Image_URL: `${backendBaseURL}/${item.Image_URL}` // Assuming backendBaseURL is the base URL of your server where images are stored
+      }));
+      res.json(itemsWithImageURLs);
     }
   });
 });
+
 
 // Endpoint to post laundry information
 app.post("/postLaundryInfo", (req, res) => {
