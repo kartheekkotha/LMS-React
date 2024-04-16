@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require("cors");
+const { google } = require('googleapis');
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const multer = require('multer');
@@ -10,7 +11,8 @@ const moment = require('moment'); // Import moment.js library
 
 require('dotenv').config();
 
-const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";;
+const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";
+console.log('Backend base URL:', backendBaseURL);
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -228,14 +230,103 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+const credentials = require('./credentials/google.json');
+const fs = require('fs');
+
+const { client_email, private_key } = credentials;
+const scopes = ['https://www.googleapis.com/auth/drive'];
+
+const auth = new google.auth.JWT(client_email, null, private_key, scopes);
+const drive = google.drive({
+  version: 'v3',
+  auth: auth // This 'auth' variable should be defined in your code. It contains the authentication credentials for Google Drive API.
+});
 // Route for posting lost items with image upload
+// ID of the folder in Google Drive where you want to upload files
+const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID' with the actual ID of your folder
+
+// Route for posting lost items with image upload to Google Drive
 app.post('/postLostItem', upload.single('image'), (req, res) => {
-  const { date, description, phNo, hostelId, roomNo, email , rollNo} = req.body;
-  console.log(date)
-  const imageUrl = req.file.path; // Retrieve uploaded image path
+  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
   const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  const imageUrl = req.file.path; // Retrieve uploaded image path
+
+  // Upload image to Google Drive
+  const fileMetadata = {
+    name: req.file.filename,
+    parents: [folderId] // Specify the folder ID as the parent
+  };
+  const media = {
+    mimeType: req.file.mimetype,
+    body: fs.createReadStream(req.file.path)
+  };
+
+  drive.files.create({
+    resource: fileMetadata,
+    media: media,
+    fields: 'id, webViewLink'
+  }, (err, response) => {
+    if (err) {
+      console.error('Error uploading image to Google Drive:', err);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+
+    // Get the file ID from the response
+    const fileId = response.data.id;
+
+    // Construct the image URL from the file ID
+    const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
+
+    // Insert the image URL into your database or perform any necessary operations
+    // For demonstration purposes, let's assume you're inserting it into a table named 'LostAndFound'
+    const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+    connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', webViewLink, rollNo], (err, result) => {
+      if (err) {
+        console.error('Error posting lost item:', err);
+        res.status(500).send('Internal Server Error');
+      } else {
+        res.status(201).json({ message: 'Lost item posted successfully' });
+      }
+    });
+  });
+});
+
+// Endpoint to post a found item with image upload
+app.post('/postFoundItem', upload.single('image'), (req, res) => {
+  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
+  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  const imageUrl = req.file.path; // Retrieve uploaded image path
+
+  // Upload image to Google Drive
+  const fileMetadata = {
+    name: req.file.filename,
+    parents: [folderId] // Specify the folder ID as the parent
+  };
+  const media = {
+    mimeType: req.file.mimetype,
+    body: fs.createReadStream(req.file.path)
+  };
+
+  drive.files.create({
+    resource: fileMetadata,
+    media: media,
+    fields: 'id, webViewLink'
+  }, (err, response) => {
+    if (err) {
+      console.error('Error uploading image to Google Drive:', err);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+
+    // Get the file ID from the response
+    const fileId = response.data.id;
+
+    // Construct the image URL from the file ID
+    const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
+
   const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', imageUrl, rollNo], (err, result) => {
+  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Found', webViewLink, rollNo], (err, result) => {
     if (err) {
       console.error('Error posting lost item:', err);
       res.status(500).send('Internal Server Error');
@@ -244,24 +335,6 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
     }
   });
 });
-
-// Endpoint to post a found item with image upload
-app.post('/postFoundItem', upload.single('image'), (req, res) => {
-  console.log('Received file:', req.file);
-  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
-  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
-  const imageUrl = req.file.path; // Retrieve uploaded image path
-  console.log('Image URL:', imageUrl);
-
-  const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Found', imageUrl, rollNo], (err, result) => {
-    if (err) {
-      console.error('Error posting found item:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.status(201).json({ message: 'Found item posted successfully' });
-    }
-  });
 });
 
 
@@ -276,7 +349,7 @@ app.get('/getLostItems', (req, res) => {
       // Modify the results to include full image URLs
       const itemsWithImageURLs = results.map(item => ({
         ...item,
-        Image_URL: `${backendBaseURL}/${item.Image_URL}` // Assuming backendBaseURL is the base URL of your server where images are stored
+        Image_URL: `${item.Image_URL}` // Assuming the Image_URL is stored as it is in the database
       }));
       res.json(itemsWithImageURLs);
     }
@@ -288,19 +361,18 @@ app.get('/getFoundItems', (req, res) => {
   const sql = 'SELECT Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No FROM LostAndFound WHERE Lost_Found = "Found" ORDER BY Date DESC';
   connection.query(sql, (err, results) => {
     if (err) {
-      console.error('Error fetching found items:', err);
+      console.error('Error fetching lost items:', err);
       res.status(500).send('Internal Server Error');
     } else {
       // Modify the results to include full image URLs
       const itemsWithImageURLs = results.map(item => ({
         ...item,
-        Image_URL: `${backendBaseURL}/${item.Image_URL}` // Assuming backendBaseURL is the base URL of your server where images are stored
+        Image_URL: `${item.Image_URL}` // Assuming the Image_URL is stored as it is in the database
       }));
       res.json(itemsWithImageURLs);
     }
   });
 });
-
 
 // Endpoint to post laundry information
 app.post("/postLaundryInfo", (req, res) => {

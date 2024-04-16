@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./lostFound.css";
 import AddImage from "../../assets/img/add-image.jpeg";
 
+
 const LostAndFound = ({ isLoggedIn, userId }) => {
   const [lostItems, setLostItems] = useState([]);
   const [foundItems, setFoundItems] = useState([]);
@@ -118,16 +119,15 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
   }, []);
 
   const renderPosts = (items) => {
-    console.log(items);
     return (
       <div>
         {items.map((item, index) => (
           <div key={index} className="card mb-3">
-            <img
-              src={item.Image_URL} // Changed from "Image"
+          <iframe 
+              src={item.Image_URL}
               className="card-img-top"
               alt={`Item ${index}`}
-            />
+            ></iframe>
             <div className="card-body">
               <p className="card-text">{item.Description}</p>
               <p className="card-text">
@@ -146,7 +146,6 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
     );
   };
   
-
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
