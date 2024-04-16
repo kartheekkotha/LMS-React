@@ -51,8 +51,8 @@ CREATE TABLE Laundry_Instance (
 
 
 
--- Creating LostAndFound Table
 CREATE TABLE LostAndFound (
+    LostFound_ID INT AUTO_INCREMENT PRIMARY KEY,
     Date DATE,
     Description VARCHAR(255),
     Ph_No VARCHAR(20),
@@ -64,6 +64,7 @@ CREATE TABLE LostAndFound (
     FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID),
     FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No)
 );
+
 
 -- Creating AdminMessage Table
 CREATE TABLE AdminMessage (
