@@ -8,12 +8,13 @@ const app = express();
 const path = require('path'); // Import path module
 const moment = require('moment'); // Import moment.js library
 
+app.use(express.json());
 
 require('dotenv').config();
 
 const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";
 console.log('Backend base URL:', backendBaseURL);
-app.use(cors({ origin: 'https://lms-react-server.vercel.app' }));
+app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -249,21 +250,15 @@ const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID
 app.post('/postLostItem', upload.single('image'), (req, res) => {
   const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
   const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
-  const imageUrl = req.file.path; // Retrieve uploaded image path
 
   // Upload image to Google Drive
   const fileMetadata = {
-    name: req.file.filename,
     parents: [folderId] // Specify the folder ID as the parent
   };
-  const media = {
-    mimeType: req.file.mimetype,
-    body: fs.createReadStream(req.file.path)
-  };
+
 
   drive.files.create({
     resource: fileMetadata,
-    media: media,
     fields: 'id, webViewLink'
   }, (err, response) => {
     if (err) {
@@ -300,17 +295,12 @@ app.post('/postFoundItem', upload.single('image'), (req, res) => {
 
   // Upload image to Google Drive
   const fileMetadata = {
-    name: req.file.filename,
     parents: [folderId] // Specify the folder ID as the parent
   };
-  const media = {
-    mimeType: req.file.mimetype,
-    body: fs.createReadStream(req.file.path)
-  };
+  
 
   drive.files.create({
     resource: fileMetadata,
-    media: media,
     fields: 'id, webViewLink'
   }, (err, response) => {
     if (err) {
