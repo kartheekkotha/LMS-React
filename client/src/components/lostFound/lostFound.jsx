@@ -134,7 +134,10 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
                 <small className="text-muted">{item.Date}</small>
               </p>
               <p className="card-text">
-                <small className="text-muted">Posted by: {item.Email}</small>
+                <small className="text-muted">Posted By : {item.Roll_No}</small>
+              </p>
+              <p className="card-text">
+                <small className="text-muted">Contact: {item.Ph_No}</small>
               </p>
             </div>
           </div>

@@ -5,6 +5,7 @@ const mysql = require("mysql2");
 const multer = require('multer');
 const app = express();
 const path = require('path'); // Import path module
+const moment = require('moment'); // Import moment.js library
 
 
 require('dotenv').config();
@@ -229,12 +230,12 @@ const upload = multer({ storage: storage });
 
 // Route for posting lost items with image upload
 app.post('/postLostItem', upload.single('image'), (req, res) => {
-  console.log('Received file:', req.file);
   const { date, description, phNo, hostelId, roomNo, email , rollNo} = req.body;
+  console.log(date)
   const imageUrl = req.file.path; // Retrieve uploaded image path
-  console.log('Image URL:', imageUrl);
+  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
   const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [date, description, phNo, hostelId, roomNo, 'Lost', imageUrl, rollNo], (err, result) => {
+  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', imageUrl, rollNo], (err, result) => {
     if (err) {
       console.error('Error posting lost item:', err);
       res.status(500).send('Internal Server Error');
@@ -248,11 +249,12 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
 app.post('/postFoundItem', upload.single('image'), (req, res) => {
   console.log('Received file:', req.file);
   const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
+  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
   const imageUrl = req.file.path; // Retrieve uploaded image path
   console.log('Image URL:', imageUrl);
 
   const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [date, description, phNo, hostelId, roomNo, 'Found', imageUrl, rollNo], (err, result) => {
+  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Found', imageUrl, rollNo], (err, result) => {
     if (err) {
       console.error('Error posting found item:', err);
       res.status(500).send('Internal Server Error');
