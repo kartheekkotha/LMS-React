@@ -14,7 +14,6 @@ require('dotenv').config();
 
 const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";
 console.log('Backend base URL:', backendBaseURL);
-app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
