@@ -271,6 +271,9 @@ const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID
     const fileId = response.data.id;*/
 app.post('/postLostItem', (req, res) => {
     // Construct the image URL from the file ID
+
+    const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
+    const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');  
     const fileId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp';
     const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
 
