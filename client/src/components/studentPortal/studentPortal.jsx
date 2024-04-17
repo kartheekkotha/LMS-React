@@ -3,7 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./studentPortal.css"
 
-const StudentPortal = () => {
+const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
   const [clothesCount, setClothesCount] = useState(0);
   const [note, setnote] = useState("");
   const [laundryHistory, setLaundryHistory] = useState([]);
@@ -31,7 +31,7 @@ const StudentPortal = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3001/submitLaundry", {
+      const response = await fetch("http://localhost:4000/submitLaundry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,7 +85,7 @@ const StudentPortal = () => {
   const handleComplaintSubmit = async () => {
     if (complaint.trim() !== "") {
       try {
-        const response = await fetch("http://localhost:3001/submitComplaint", {
+        const response = await fetch("http://localhost:4000/submitComplaint", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -152,7 +152,7 @@ const StudentPortal = () => {
     const entryToRemove = laundryHistory[index];
 
     try {
-      const response = await fetch("http://localhost:3001/removeLaundry", {
+      const response = await fetch("http://localhost:4000/removeLaundry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

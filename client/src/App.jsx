@@ -65,13 +65,13 @@ const App = () =>{
         <Routes>
           <Route path="/" element={<LandingPage isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}
           />} />
-          <Route path="/portal" element={<StudentPortal userId={userId}/>} />
+          <Route path="/portal" element={<StudentPortal isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}/>} />
           <Route path="/login" element={<Login  onLogin={handleLogin} />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<AdminPortal />} />
-          <Route path="/lostfound" element={<LostAndFound  isLoggedIn ={isLoggedIn} userId={userId}/>} />
-          <Route path="/adminAnnouncements" element={<Announcements />} />
-          <Route path="/studentComplaints" element={<Complaints />} />
+          <Route path="/admin" element={<AdminPortal isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}/>} />
+          <Route path="/lostfound" element={<LostAndFound  isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}/>} />
+          <Route path="/adminAnnouncements" element={<Announcements isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}/>} />
+          <Route path="/studentComplaints" element={<Complaints isLoggedIn ={isLoggedIn} userId = {userId} userRole = {userRole}/>} />
         </Routes>
       </div>
     </Router>

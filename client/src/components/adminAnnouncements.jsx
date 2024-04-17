@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, ListGroup, Dropdown } from 'react-bootstrap';
 import "./adminAnnouncements.css";
 
-const Announcements = () => {
+const Announcements = ({ isLoggedIn, userId , userRole}) => {
   const [messages, setMessages] = useState([
     {
       subject: 'Important Announcement',

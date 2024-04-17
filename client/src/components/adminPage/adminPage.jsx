@@ -3,7 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./adminPage.css"
 
-const AdminPortal = () => {
+const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
   const [laundryData, setLaundryData] = useState([
     {
       hostelName: "Hostel A",

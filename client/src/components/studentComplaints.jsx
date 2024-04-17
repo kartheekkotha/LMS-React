@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, ListGroup, Dropdown } from 'react-bootstrap';
 import "./adminAnnouncements.css";
 
-const Complaints = () => {
+const Complaints = ({ isLoggedIn, userId , userRole}) => {
   const [complaints, setComplaints] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
 

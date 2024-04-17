@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./landingPage.css";
 
-const LandingPage = ({ isLoggedIn, userId }) => {
+const LandingPage = ({ isLoggedIn, userId , userRole}) => {
   const getUsername = (email) => {
     const username = email.split("@")[0];
     return username;

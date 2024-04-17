@@ -3,7 +3,7 @@ import "./lostFound.css";
 import AddImage from "../../assets/img/add-image.jpeg";
 
 
-const LostAndFound = ({ isLoggedIn, userId }) => {
+const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
   const [lostItems, setLostItems] = useState([]);
   const [foundItems, setFoundItems] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);

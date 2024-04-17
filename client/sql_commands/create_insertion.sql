@@ -35,18 +35,18 @@ CREATE TABLE Laundry_Assignment (
     FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No) 
 );
 
--- Laundry_Instance Table
 CREATE TABLE Laundry_Instance (
     Instance_ID INT PRIMARY KEY,
-    Bag_ID INT ,
+    Bag_ID INT,
     Clothes_Given INT,
     Received_Date DATE,
     Return_Date DATE,
     Assigned_Hostel_ID INT,
     Admin_Email VARCHAR(255),
-    FOREIGN KEY (Bag_ID) REFERENCES Laundry_Assignment(Bag_ID),  
-    FOREIGN KEY (Assigned_Hostel_ID) REFERENCES Hostel(Hostel_ID),  
-    FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)  
+    Edit_Status VARCHAR(255), -- Added new column for edit status
+    FOREIGN KEY (Bag_ID) REFERENCES Laundry_Assignment(Bag_ID),
+    FOREIGN KEY (Assigned_Hostel_ID) REFERENCES Hostel(Hostel_ID),
+    FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)
 );
 
 
