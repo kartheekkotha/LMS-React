@@ -269,7 +269,7 @@ const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID
 
     // Get the file ID from the response
     const fileId = response.data.id;*/
-app.post('/postLostItem', (req, res) => {
+app.post('/postLostItem', upload.single('image'), (req, res) => {
     // Construct the image URL from the file ID
 
     const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
