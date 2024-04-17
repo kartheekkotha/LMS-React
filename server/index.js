@@ -247,16 +247,19 @@ const drive = google.drive({
 const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID' with the actual ID of your folder
 
 // Route for posting lost items with image upload to Google Drive
-/*app.post('/postLostItem', upload.single('image'), (req, res) => {
+app.post('/postLostItem', upload.single('image'), (req, res) => {
   const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
   const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
 
-  // Upload image to Google Drive
   const fileMetadata = {
+    name: req.file.filename,
     parents: [folderId] // Specify the folder ID as the parent
   };
+  const media = {
+    mimeType: req.file.mimetype,
+    body: fs.createReadStream(req.file.path)
+  };
   
-
   drive.files.create({
     resource: fileMetadata,
     fields: 'id, webViewLink'
@@ -268,13 +271,7 @@ const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID
     }
 
     // Get the file ID from the response
-    const fileId = response.data.id;*/
-app.post('/postLostItem', upload.single('image'), (req, res) => {
-    // Construct the image URL from the file ID
-
-    const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
-    const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');  
-    const fileId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp';
+    const fileId = response.data.id;
     const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
 
     // Insert the image URL into your database or perform any necessary operations
@@ -289,7 +286,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
       }
     });
   });
-//});
+});
 
 // Endpoint to post a found item with image upload
 app.post('/postFoundItem', upload.single('image'), (req, res) => {
