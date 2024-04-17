@@ -82,7 +82,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
         method: "POST",
         body: formData,
       });
-
+     console.log(response);
       if (response.ok) {
         const data = await response.json();
         if (currentItem.type === "lost") {
