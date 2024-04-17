@@ -391,3 +391,68 @@ app.post("/postLaundryInfo", (req, res) => {
     }
   );
 });
+
+// Endpoint to send admin message
+app.post('/sendMessageToHostel', (req, res) => {
+  const { hostelName, message, adminEmail } = req.body;
+  console.log(hostelName, message, adminEmail);   
+      // Insert admin message into AdminMessage table
+      const insertQuery = 'INSERT INTO AdminMessage (Date, Description, Hostel_ID, Admin_Email) VALUES (?, ?, ?, ?)';
+      const complaintDate = new Date().toLocaleDateString();
+      const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');    
+      connection.query(insertQuery, [formattedDate, message, hostelName, adminEmail], (error, results) => {
+          if (error) {
+            console.log("Ir is a error message")
+              console.error('Error inserting admin message:', error);
+              res.status(500).json({ error: 'Internal server error' });
+              return;
+          }
+          res.status(200).json({ message: 'Admin message sent successfully' });
+      });
+  });
+
+
+// Endpoint to fetch laundry data
+app.get('/getLaundryData', (req, res) => {
+  const query = 'SELECT * FROM Laundry_Instance';
+  connection.query(query, (error, results) => {
+      if (error) {
+          console.error('Error fetching laundry data:', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+      }
+
+      res.json(results);
+  });
+});
+
+// Endpoint to fetch hostels
+app.get('/getHostels', (req, res) => {
+  const sql = 'SELECT * FROM Hostel';
+  connection.query(sql, (error, results) => {
+      if (error) {
+          console.error('Error fetching hostels:', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+      }
+      res.json(results);
+  });
+});
+
+app.get('/getMessagesForHostel/:hostelName', (req, res) => {
+  const hostelName = req.params.hostelName;
+
+  // Query the database for messages for the specified hostel
+  const selectQuery = 'SELECT * FROM AdminMessage WHERE Hostel_ID = ?';
+
+  connection.query(selectQuery, [hostelName], (error, results) => {
+    if (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    // Return the messages
+    res.status(200).json(results);
+  });
+});

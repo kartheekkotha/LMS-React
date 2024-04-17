@@ -1,41 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, ListGroup, Dropdown } from 'react-bootstrap';
 import "./adminAnnouncements.css";
 
-const Announcements = ({ isLoggedIn, userId , userRole}) => {
-  const [messages, setMessages] = useState([
-    {
-      subject: 'Important Announcement',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      date: '2023-11-10',
-    },
-    {
-      subject: 'Reminder for Upcoming Exam',
-      content: 'Nullam ac urna eu felis dapibus condimentum sit amet a augue.',
-      date: '2023-11-09',
-    },
-    // Add more messages as needed
-  ]);
-
+const Announcements = ({ isLoggedIn, userId, userRole }) => {
+  const [messages, setMessages] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
+
+  useEffect(() => {
+    // Fetch student details to get hostel ID
+    fetchStudentDetails(userId);
+  }, [userId]);
+
+  const fetchStudentDetails = async (userId) => {
+    try {
+      const response = await fetch(`${backendURL}/getStudentDetails/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch student details');
+      }
+      const data = await response.json();
+      const hostelId = data.Hostel_ID;
+      // Fetch messages for the hostel using the hostel ID
+      fetchMessages(hostelId);
+    } catch (error) {
+      console.error('Error fetching student details:', error);
+    }
+  };
+
+  const fetchMessages = async (hostelId) => {
+    try {
+      const response = await fetch(`${backendURL}/getMessagesForHostel/${hostelId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
+      }
+      const data = await response.json();
+      setMessages(data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
   // Sort messages by date in descending order
-  const sortedMessages = [...messages].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedMessages = [...messages].sort((a, b) => new Date(b.Date) - new Date(a.Date));
 
   const renderMessages = () => {
     // Filter messages based on the selected date
     const filteredMessages = selectedDate
-      ? sortedMessages.filter((message) => message.date === selectedDate)
+      ? sortedMessages.filter((message) => message.Date === selectedDate)
       : sortedMessages;
 
     return filteredMessages.map((message, index) => (
       <ListGroup.Item key={index}>
         <Card>
           <Card.Body>
-            <Card.Title>{message.subject}</Card.Title>
-            <Card.Text>{message.content}</Card.Text>
+            <Card.Title>{message.Description}</Card.Title>
+            {/* Assuming 'Date' in the message object represents the announcement date */}
+            <Card.Footer className="text-muted">{message.Date}</Card.Footer>
           </Card.Body>
-          <Card.Footer className="text-muted">{message.date}</Card.Footer>
         </Card>
       </ListGroup.Item>
     ));
@@ -46,7 +67,7 @@ const Announcements = ({ isLoggedIn, userId , userRole}) => {
   };
 
   const renderDateFilterDropdown = () => {
-    const uniqueDates = [...new Set(messages.map((message) => message.date))];
+    const uniqueDates = [...new Set(messages.map((message) => message.Date))];
 
     return (
       <Dropdown>

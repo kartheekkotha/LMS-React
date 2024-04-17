@@ -70,7 +70,7 @@ CREATE TABLE LostAndFound (
 
 -- Creating AdminMessage Table
 CREATE TABLE AdminMessage (
-    Message_ID INT PRIMARY KEY,
+    Message_ID INT AUTO_INCREMENT PRIMARY KEY,
     Date DATE,
     Description VARCHAR(255),
     Hostel_ID INT,
@@ -82,7 +82,7 @@ CREATE TABLE AdminMessage (
 
 -- Creating StudentComplaint Table
 CREATE TABLE StudentComplaint (
-    Complaint_ID INT PRIMARY KEY,
+    Complaint_ID INT AUTO_INCREMENT PRIMARY KEY,
     Date DATE,
     Description VARCHAR(255),
     Roll_No INT,

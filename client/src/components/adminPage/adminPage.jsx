@@ -1,9 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./adminPage.css"
 
 const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
+  const [hostels, setHostels] = useState([]);
+
+  
+  const fetchHostels = async () => {
+    try {
+      const response = await fetch(`${backendURL}/getHostels`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      console.log("Hostels:", data);
+      setHostels(data);
+    } catch (error) {
+      console.error("Error fetching hostels:", error);
+      toast.error("Error fetching hostels", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          fontSize: "18px",
+          padding: "20px",
+        },
+      });
+    }
+  };
+  
+  useEffect(() => {
+    fetchHostels();
+  }, []);
   const [laundryData, setLaundryData] = useState([
     {
       hostelName: "Hostel A",
@@ -86,7 +120,8 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
     );
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
+    // Check if required fields are filled
     if (!messageHostel || !adminMessage) {
       toast.error("Please select a hostel and enter a message!", {
         position: "top-center",
@@ -103,27 +138,57 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
       });
       return;
     }
-
-    // Code to send a message to the selected hostel
-    toast.success(`Message sent to ${messageHostel}: ${adminMessage}`, {
-      position: "top-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      style: {
-        fontSize: "18px",
-        padding: "20px",
-      },
-    });
-
-    // Clear message input fields after sending
-    setMessageHostel("");
-    setAdminMessage("");
+  
+    try {
+      // Send request to backend
+      await fetch(`${backendURL}/sendMessageToHostel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hostelName: messageHostel,
+          message: adminMessage,
+          adminEmail: userId,
+        }),
+      });
+  
+      // Show success message
+      toast.success(`Message sent to ${messageHostel}: ${adminMessage}`, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          fontSize: "18px",
+          padding: "20px",
+        },
+      });
+  
+      // Clear message input fields after sending
+      setMessageHostel("");
+      setAdminMessage("");
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error("Error sending message", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          fontSize: "18px",
+          padding: "20px",
+        },
+      });
+    }
   };
-
+  
   const renderFiltersAndSort = () => (
     <div className="mb-3 d-flex justify-content-between align-items-center">
       <div className="d-flex">
@@ -295,44 +360,44 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
           </table>
         </div>
         <div className="col-md-3">
-          {/* Message Box */}
-          <div className="card">
-            <div className="card-body">
-              <h4>Send Message to Hostel</h4>
-              <div className="form-group">
-                <label htmlFor="messageHostel">Hostel:</label>
-                <select
-                  className="form-control"
-                  id="messageHostel"
-                  onChange={(e) => setMessageHostel(e.target.value)}
-                  value={messageHostel}
-                >
-                  <option value="">Select Hostel</option>
-                  {Array.from(
-                    new Set(laundryData.map((entry) => entry.hostelName))
-                  ).map((hostel, index) => (
-                    <option key={index} value={hostel}>
-                      {hostel}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="adminMessage">Message:</label>
-                <textarea
-                  className="form-control"
-                  id="adminMessage"
-                  rows="3"
-                  value={adminMessage}
-                  onChange={(e) => setAdminMessage(e.target.value)}
-                ></textarea>
-              </div>
-              <button className="btn btn-send" onClick={handleSendMessage}>
-                Send Message
-              </button>
-            </div>
-          </div>
-        </div>
+  {/* Message Box */}
+  <div className="card">
+    <div className="card-body">
+      <h4>Send Message to Hostel</h4>
+      <div className="form-group">
+        <label htmlFor="messageHostel">Hostel:</label>
+        <select
+          className="form-control"
+          id="messageHostel"
+          onChange={(e) => setMessageHostel(e.target.value)}
+          value={messageHostel}
+        >
+          <option value="">Select Hostel</option>
+          {/* Use the hostels data fetched from the backend */}
+          {hostels.map((hostel, index) => (
+            <option key={index} value={hostel.Hostel_ID}>
+              {hostel.Hostel_Name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label htmlFor="adminMessage">Message:</label>
+        <textarea
+          className="form-control"
+          id="adminMessage"
+          rows="3"
+          value={adminMessage}
+          onChange={(e) => setAdminMessage(e.target.value)}
+        ></textarea>
+      </div>
+      <button className="btn btn-send" onClick={handleSendMessage}>
+        Send Message
+      </button>
+    </div>
+  </div>
+</div>
+
       </div>
     );
   };
