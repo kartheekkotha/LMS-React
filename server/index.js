@@ -263,7 +263,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
   }, (err, response) => {
     if (err) {
       console.error('Error uploading image to Google Drive:', err);
-      res.status(500).send('Internal Server Error');
+      res.status(500).send('Internal Server Error while creating google image link');
       return;
     }
 
@@ -279,7 +279,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
     connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', webViewLink, rollNo], (err, result) => {
       if (err) {
         console.error('Error posting lost item:', err);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send(`Internal Server Error but link of drive image is ${webViewLink}`);
       } else {
         res.status(201).json({ message: 'Lost item posted successfully' });
       }
