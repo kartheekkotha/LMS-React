@@ -63,6 +63,7 @@ const LostAndFound = ({ isLoggedIn, userId }) => {
 
     // Create FormData object
     const formData = new FormData();
+    formData.set('Content-Type', 'multipart/form-data');
     formData.append('date', new Date().toLocaleString());
     formData.append('description', currentItem.description);
     formData.append('phNo', studentDetails.Phone_No);

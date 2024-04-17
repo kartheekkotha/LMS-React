@@ -14,6 +14,7 @@ require('dotenv').config();
 
 const backendBaseURL = process.env.BACKEND_URL || "https://lms-react-server.vercel.app";
 console.log('Backend base URL:', backendBaseURL);
+app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -254,7 +255,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
   const fileMetadata = {
     parents: [folderId] // Specify the folder ID as the parent
   };
-
+  
 
   drive.files.create({
     resource: fileMetadata,
@@ -294,12 +295,17 @@ app.post('/postFoundItem', upload.single('image'), (req, res) => {
 
   // Upload image to Google Drive
   const fileMetadata = {
+    name: req.file.filename,
     parents: [folderId] // Specify the folder ID as the parent
   };
-  
+  const media = {
+    mimeType: req.file.mimetype,
+    body: fs.createReadStream(req.file.path)
+  };
 
   drive.files.create({
     resource: fileMetadata,
+    media: media,
     fields: 'id, webViewLink'
   }, (err, response) => {
     if (err) {
