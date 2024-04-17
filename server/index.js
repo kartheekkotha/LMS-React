@@ -162,24 +162,25 @@ app.get('/getLaundryHistory', async (req, res) => {
 
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
-  const { complaintText, studentEmail } = req.body;
+  const { complaintText, rollNo } = req.body;
 
-  if (!complaintText || !studentEmail) {
+  if (!complaintText || !rollNo) {
     return res.status(400).json({ message: 'Invalid request. Missing data.' });
   }
 
   // Simulating submission of complaint
   const complaintDate = new Date().toLocaleDateString();
+  const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
   const newComplaint = {
     complaintText,
-    complaintDate,
-    studentEmail,
+    formattedDate,
+    rollNo,
   };
 
   // Store complaint in the database
   connection.query(
-    'INSERT INTO student_complaint (description, date, email) VALUES (?, ?, ?)',
-    [complaintText, complaintDate, studentEmail],
+    'INSERT INTO StudentComplaint (Description, Date, Roll_No) VALUES (?, ?, ?)',
+    [complaintText, formattedDate, rollNo],
     (error, results) => {
       if (error) {
         console.error('Error during complaint submission:', error);
@@ -190,24 +191,13 @@ app.post("/submitComplaint", (req, res) => {
     }
   );
 });
-
 // Endpoint to get complaints
 app.get('/getComplaints', (req, res) => {
-  // Use the connection to get a connection
-  connection.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error getting connection from connection:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-
-    const query = 'SELECT * FROM student_complaint';
+    const query = 'SELECT * FROM StudentComplaint';
 
     // Execute the query
     connection.query(query, (error, results) => {
-      // Release the connection back to the connection
-      connection.release();
-
+      // Release the connection back to the connection pool
       if (error) {
         console.error('Error executing query:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -218,8 +208,6 @@ app.get('/getComplaints', (req, res) => {
       res.json(results);
     });
   });
-});
-
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -259,7 +247,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
     mimeType: req.file.mimetype,
     body: fs.createReadStream(req.file.path)
   };
-  
+
   drive.files.create({
     resource: fileMetadata,
     fields: 'id, webViewLink'

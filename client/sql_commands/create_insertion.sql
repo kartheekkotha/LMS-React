@@ -1,9 +1,11 @@
 -- Hostel Table
 CREATE TABLE Hostel (
     Hostel_ID INT PRIMARY KEY,
+    Hostel_Name VARCHAR(255), -- Added new column for hostel name
     Warden_Name VARCHAR(255),
     Contact_No VARCHAR(20)
 );
+
 
 -- Student Table
 CREATE TABLE Student (
@@ -84,7 +86,6 @@ CREATE TABLE StudentComplaint (
     Date DATE,
     Description VARCHAR(255),
     Roll_No INT,
-    Image_URL VARCHAR(255), -- New attribute for image URL
     FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No)
 );
 

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./studentPortal.css"
 
 const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
+  const [studentDetails, setStudentDetails] = useState(null);
   const [clothesCount, setClothesCount] = useState(0);
   const [note, setnote] = useState("");
   const [laundryHistory, setLaundryHistory] = useState([]);
@@ -12,8 +13,30 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
   const [complaint, setComplaint] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
 
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
+  
+  useEffect(() => {
+    if (isLoggedIn && userId && userRole === "student") {
+      fetchStudentDetails(userId);
+    }
+  }, [isLoggedIn, userId, userRole]);
+
+  const fetchStudentDetails = async (userId) => {
+    try {
+      const response = await fetch(`${backendURL}/getStudentDetails/${userId}`);
+      if (response.ok) {
+        const student = await response.json();
+        setStudentDetails(student);
+      } else {
+        throw new Error("Failed to fetch student details");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+    }
+  };
+
   const handleClothesSubmit = async () => {
-    if (clothesCount <= 0 || !studentEmail.trim()) {
+    if (clothesCount <= 0 || !isLoggedIn || !studentDetails || userRole !== "student" ) {
       toast.error("Please enter a valid number of clothes and student email!", {
         position: "top-center",
         autoClose: 3000,
@@ -29,14 +52,14 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
       });
       return;
     }
-
+    const rollNo = studentDetails.Roll_No;
     try {
-      const response = await fetch("http://localhost:4000/submitLaundry", {
+      const response = await fetch(`${backendURL}submitLaundry`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ givenClothes: clothesCount, studentEmail }),
+        body: JSON.stringify({ givenClothes: clothesCount, rollNo }),
       });
 
       if (response.ok) {
@@ -83,14 +106,31 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
 
 
   const handleComplaintSubmit = async () => {
+    if (!isLoggedIn || userRole !== "student" || !studentDetails || complaint.trim() === "") {
+      toast.error("Please enter a valid complaint and sign in with student email!", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: false,
+        progress: undefined,
+        style: {
+          fontSize: "18px",
+          padding: "20px",
+        },
+      });
+      return;
+    }
     if (complaint.trim() !== "") {
+      const rollNo = studentDetails.Roll_No;
       try {
-        const response = await fetch("http://localhost:4000/submitComplaint", {
+        const response = await fetch(`${backendURL}/submitComplaint`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ complaintText: complaint, studentEmail }),
+          body: JSON.stringify({ complaintText: complaint, rollNo }),
         });
 
         if (response.ok) {
@@ -152,7 +192,7 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
     const entryToRemove = laundryHistory[index];
 
     try {
-      const response = await fetch("http://localhost:4000/removeLaundry", {
+      const response = await fetch(`${backendURL}/removeLaundry_old`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
