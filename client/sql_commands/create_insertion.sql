@@ -7,7 +7,6 @@ CREATE TABLE Hostel (
 );
 
 
--- Student Table
 CREATE TABLE Student (
     Roll_No INT PRIMARY KEY,
     Name VARCHAR(255),
@@ -18,6 +17,7 @@ CREATE TABLE Student (
     Phone_No VARCHAR(20),
     Image_URL VARCHAR(255),
     Password_Hash VARCHAR(255),
+    laundry_status BOOL,
     FOREIGN KEY (Hostel_ID) REFERENCES Hostel(Hostel_ID)
 );
 
@@ -37,20 +37,21 @@ CREATE TABLE Laundry_Assignment (
     FOREIGN KEY (Roll_No) REFERENCES Student(Roll_No) 
 );
 
+-- Updated Laundry_Instance Table
 CREATE TABLE Laundry_Instance (
-    Instance_ID INT PRIMARY KEY,
+    Instance_ID INT AUTO_INCREMENT PRIMARY KEY,
     Bag_ID INT,
     Clothes_Given INT,
     Received_Date DATE,
     Return_Date DATE,
     Assigned_Hostel_ID INT,
     Admin_Email VARCHAR(255),
-    Edit_Status VARCHAR(255), -- Added new column for edit status
+    Edit_Status VARCHAR(255),
+    Student_Message TEXT, -- Added new column for student message
     FOREIGN KEY (Bag_ID) REFERENCES Laundry_Assignment(Bag_ID),
     FOREIGN KEY (Assigned_Hostel_ID) REFERENCES Hostel(Hostel_ID),
     FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)
 );
-
 
 
 CREATE TABLE LostAndFound (

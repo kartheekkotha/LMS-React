@@ -103,63 +103,78 @@ app.post("/login", (req, res) => {
   });
 });
 
-// Endpoint to submit laundry
 app.post('/submitLaundry', (req, res) => {
-  const { givenClothes, studentEmail } = req.body;
+  const { givenClothes, rollNo, assignedHostelId, message } = req.body;
 
   // Check if the number of clothes is greater than 0 and student email is not empty
-  if (givenClothes <= 0 || !studentEmail.trim()) {
-    res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
-    return;
+  if (givenClothes <= 0 || !rollNo) {
+    return res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
   }
 
-  // Simulate saving the laundry submission to the database
-  const submissionDate = new Date().toLocaleDateString();
-  const laundryStatus = {
-    submission_date: submissionDate,
-    given_clothes: givenClothes,
-    status: 'Received bag',
-    studentEmail: studentEmail,
-  };
+  // Formatting the date
+  const laundryDate = new Date().toLocaleDateString();
+  const formattedDate = moment(laundryDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  const editStatus = 'Received bag'; // Initial status
 
-  // Assuming you have a table named 'laundry_submission'
-  connection.execute(
-    'INSERT INTO laundry_submission (submission_date, given_clothes, status, studentEmail) VALUES (?, ?, ?, ?)',
-    [submissionDate, givenClothes, 'Received bag', studentEmail],
-    (err, results) => {
-      if (err) {
-        console.error('Error inserting into database:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
-      } else {
-        const insertedId = results.insertId;
-        res.status(200).json({ message: 'Laundry submitted successfully', laundryStatus: { id: insertedId, ...laundryStatus } });
-      }
+  // Query to insert laundry instance into database
+  const instanceInsertQuery = `
+    INSERT INTO Laundry_Instance (Bag_ID, Clothes_Given, Received_Date, Assigned_Hostel_ID, Edit_Status, Student_Message) 
+    VALUES (
+      (SELECT Bag_ID FROM Laundry_Assignment WHERE Roll_No = ?), 
+      ?, ?, ?, ?, ?
+    )
+  `;
+
+  // Execute the instance insertion query
+  connection.query(instanceInsertQuery, [rollNo, givenClothes, formattedDate, assignedHostelId, editStatus, message], (error, results) => {
+    if (error) {
+      console.error('Error submitting laundry:', error);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
     }
-  );
+
+    // Update laundry_status in Student table
+    const updateStatusQuery = 'UPDATE Student SET laundry_status = true WHERE Roll_No = ?';
+
+    // Execute the status update query
+    connection.query(updateStatusQuery, [rollNo], (error, results) => {
+      if (error) {
+        console.error('Error updating laundry status:', error);
+        return res.status(500).json({ success: false, error: 'Internal server error' });
+      }
+
+      // Send success response
+      return res.status(200).json({ success: true, message: 'Laundry submitted successfully' });
+    });
+  });
 });
+
 
 // Endpoint to get laundry history
-app.get('/getLaundryHistory', async (req, res) => {
-  const { studentEmail } = req.query;
+app.get('/getLaundry/:rollNo', (req, res) => {
+  const rollNo = req.params.rollNo;
 
-  try {
-    const connection = await connection.getConnection();
+  // Query to fetch laundry history for the student
+  const laundryQuery = `
+    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
+    FROM Laundry_Instance li
+    JOIN Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
+    JOIN Student s ON la.Roll_No = s.Roll_No
+    JOIN Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
+    WHERE s.Roll_No = ?
+    ORDER BY li.Received_Date DESC
+  `;
 
-    // Fetch laundry history based on the student email
-    const [rows] = await connection.execute(
-      'SELECT * FROM laundry_submission WHERE studentEmail = ?',
-      [studentEmail]
-    );
+  // Execute the laundry query
+  connection.query(laundryQuery, [rollNo], (error, results) => {
+    if (error) {
+      console.error('Error fetching laundry history:', error);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
 
-    connection.release();
-
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error('Error fetching laundry history:', error);
-    res.status(500).send('Internal Server Error');
-  }
+    // Send the laundry history as response
+    return res.status(200).json({ success: true, laundryHistory: results });
+  });
 });
-
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
   const { complaintText, rollNo } = req.body;
