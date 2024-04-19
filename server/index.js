@@ -108,7 +108,7 @@ app.post('/submitLaundry', (req, res) => {
   const { givenClothes, studentEmail } = req.body;
 
   // Check if the number of clothes is greater than 0 and student email is not empty
-  if (givenClothes <= 0 || !studentEmail.trim()) {
+  if (givenClothes <= 0 || givenClothes > 30 || !studentEmail.trim()) {
     res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
     return;
   }
