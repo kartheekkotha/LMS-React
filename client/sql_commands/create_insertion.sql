@@ -129,3 +129,12 @@ INSERT INTO AdminMessage (Message_ID, Date, Description, Hostel_ID, Admin_Email,
 INSERT INTO StudentComplaint (Complaint_ID, Date, Description, Roll_No, Image_URL) VALUES
 (1, '2024-04-01', 'Broken washing machine', 1001, 'http://example.com/complaint1.jpg'),
 (2, '2024-04-02', 'Dryer not working', 1002, 'http://example.com/complaint2.jpg');
+
+-- Insert random values into the table
+INSERT INTO studentComplaint (Complaint_ID, Date, Description, Roll_No) 
+VALUES 
+    (UUID(), NOW(), 'Description 1', RAND()*1000),
+    (UUID(), NOW(), 'Description 2', RAND()*1000),
+    (UUID(), NOW(), 'Description 3', RAND()*1000),
+    -- Add more rows as needed
+    ;

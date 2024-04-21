@@ -295,7 +295,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
               <th>Date of Submission</th>
               <th>Number of Clothes</th>
               <th>Status</th>
-              <th>Student Email</th>
+              <th>Return Date</th>
             </tr>
           </thead>
           <tbody>
@@ -306,7 +306,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
                 <td style={{ color: getStatusColor(entry.Edit_Status) }}>
                   {entry.Edit_Status}
                 </td>
-                <td>{entry.studentEmail}</td>
+                <td>{entry.returnDate}</td>
               </tr>
             ))}
           </tbody>

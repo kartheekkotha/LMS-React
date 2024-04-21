@@ -40,46 +40,38 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
   }, []);
   const [laundryData, setLaundryData] = useState([
     {
-      hostelName: "Hostel A",
-      dateReceived: "2023-11-10",
-      bagsReceived: 5,
-      status: "Received",
+      hostelName: "Hostel 2B",
+      dateReceived: "2023-11-09",
+      student: "ab123",
+      clothesReceived: 15,
+      status: "Washing",
+      returnDate: "2023-18-09",
       submissions: [
         {
           name: "John Doe",
+          email: "ab123",
+          hostel: "2B",
           room: "502",
           phone: "123-456-7890",
-          count: 10,
           note: "winter clotes to be washed carefully"
         },
-        {
-          name: "John Doe",
-          room: "502",
-          phone: "123-456-7890",
-          count: 10,
-          note: "winter clotes to be washed carefully"
-        },
-        {
-          name: "John Doe",
-          room: "502",
-          phone: "123-456-7890",
-          count: 10,
-          note: "winter clotes to be washed carefully"
-        },
-        // Add more submissions as needed
+        
       ],
     },
     {
       hostelName: "Hostel B",
       dateReceived: "2023-11-09",
-      bagsReceived: 8,
+      student: "ty491",
+      clothesReceived: 20,
       status: "Washing",
+      returnDate: "2023-18-09",
       submissions: [
         {
           name: "John Doe",
+          email: "ty491",
+          hostel: "B",
           room: "502",
           phone: "123-456-7890",
-          count: 10,
           note: "winter clotes to be washed carefully"
         },
         // Add more submissions as needed
@@ -101,6 +93,11 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
   const handleEditStatus = (index, newStatus) => {
     const updatedLaundryData = [...laundryData];
     updatedLaundryData[index].status = newStatus;
+    if (newStatus === "Ready to Collect") {
+      // Update returnDate to current date when status changes to Ready to Collect
+      const currentDate = new Date().toISOString().split('T')[0];
+      updatedLaundryData[index].returnDate = currentDate;
+    }
     setLaundryData(updatedLaundryData);
     toast.success(
       `Status updated for ${updatedLaundryData[index].hostelName}`,
@@ -119,6 +116,8 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
       }
     );
   };
+  
+
 
   const handleSendMessage = async () => {
     // Check if required fields are filled
@@ -310,16 +309,18 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
     return (
       <div className="row mt-3">
         <div className="col-md-9">
-          <h3>Laundry Information from Each Hostel</h3>
+          <h3>Laundry Information</h3>
           {renderFiltersAndSort()}
           <table className="table mt-4">
             <thead>
               <tr>
                 <th>Hostel Name</th>
                 <th>Date Received</th>
-                <th>Bags Received</th>
+                <th>Student</th>
+                <th>Clothes Received</th>
                 <th>Status</th>
                 <th>Edit Status</th>
+                <th>Return Date</th>
               </tr>
             </thead>
             <tbody>
@@ -331,8 +332,9 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
                     onClick={() => handleViewDetails(index)}
                     style={{ cursor: "pointer", color: "#2026d2" }}
                   >
-                    {entry.bagsReceived}
+                    {entry.student}
                   </td>
+                  <td>{entry.clothesReceived}</td>
                   <td style={{ backgroundColor: getStatusColor(entry.status)}}>
                     {entry.status}
                   </td>
@@ -348,12 +350,11 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
                         <option value="Received">Received</option>
                         <option value="Washing">Washing</option>
                         <option value="Drying">Drying</option>
-                        <option value="Ready to Collect">
-                          Ready to Collect
-                        </option>
+                        <option value="Ready to Collect">Ready to Collect</option>
                       </select>
                     </div>
                   </td>
+                  <td>{entry.returnDate}</td>
                 </tr>
               ))}
             </tbody>
@@ -434,9 +435,10 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
     const details = laundryData[index].submissions.map((submission, idx) => (
       <tr key={idx}>
         <td>{submission.name}</td>
+        <td>{submission.email}</td>
+        <td>{submission.hostel}</td>
         <td>{submission.room}</td>
         <td>{submission.phone}</td>
-        <td>{submission.count}</td>
         <td>{submission.note}</td>
       </tr>
     ));
@@ -444,14 +446,15 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
     // Show details in a new table
     toast.info(
       <div>
-        <h3 className="toast-title">Details for Submissions from {hostelName}</h3>
+        <h3 className="toast-title">Student Details</h3>
         <table className="table">
           <thead>
             <tr>
               <th>Name</th>
+              <th>Email</th>
+              <th>Hostel</th>
               <th>Room</th>
               <th>Phone</th>
-              <th>No. of Clothes</th>
               <th>Note</th>
             </tr>
           </thead>
@@ -469,9 +472,9 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
         style: {
           marginTop:"100px",
           marginLeft:"300px",
-          fontSize: "15px",
+          fontSize: "18px",
           padding: "10px",
-          height:"450px",
+          height:"400px",
           width:"1000px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
           borderRadius:"5px"
