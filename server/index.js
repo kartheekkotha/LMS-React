@@ -103,83 +103,99 @@ app.post("/login", (req, res) => {
   });
 });
 
-// Endpoint to submit laundry
 app.post('/submitLaundry', (req, res) => {
-  const { givenClothes, studentEmail } = req.body;
+  const { givenClothes, rollNo, assignedHostelId, message } = req.body;
 
   // Check if the number of clothes is greater than 0 and student email is not empty
-  if (givenClothes <= 0 || givenClothes > 30 || !studentEmail.trim()) {
-    res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
-    return;
+  if (givenClothes <= 0 || !rollNo) {
+    return res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
   }
 
-  // Simulate saving the laundry submission to the database
-  const submissionDate = new Date().toLocaleDateString();
-  const laundryStatus = {
-    submission_date: submissionDate,
-    given_clothes: givenClothes,
-    status: 'Received bag',
-    studentEmail: studentEmail,
-  };
+  // Formatting the date
+  const laundryDate = new Date().toLocaleDateString();
+  const formattedDate = moment(laundryDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  const editStatus = 'Received bag'; // Initial status
 
-  // Assuming you have a table named 'laundry_submission'
-  connection.execute(
-    'INSERT INTO laundry_submission (submission_date, given_clothes, status, studentEmail) VALUES (?, ?, ?, ?)',
-    [submissionDate, givenClothes, 'Received bag', studentEmail],
-    (err, results) => {
-      if (err) {
-        console.error('Error inserting into database:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
-      } else {
-        const insertedId = results.insertId;
-        res.status(200).json({ message: 'Laundry submitted successfully', laundryStatus: { id: insertedId, ...laundryStatus } });
-      }
+  // Query to insert laundry instance into database
+  const instanceInsertQuery = `
+    INSERT INTO Laundry_Instance (Bag_ID, Clothes_Given, Received_Date, Assigned_Hostel_ID, Edit_Status, Student_Message) 
+    VALUES (
+      (SELECT Bag_ID FROM Laundry_Assignment WHERE Roll_No = ?), 
+      ?, ?, ?, ?, ?
+    )
+  `;
+
+  // Execute the instance insertion query
+  connection.query(instanceInsertQuery, [rollNo, givenClothes, formattedDate, assignedHostelId, editStatus, message], (error, results) => {
+    if (error) {
+      console.error('Error submitting laundry:', error);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
     }
-  );
+
+    // Update laundry_status in Student table
+    const updateStatusQuery = 'UPDATE Student SET laundry_status = true WHERE Roll_No = ?';
+
+    // Execute the status update query
+    connection.query(updateStatusQuery, [rollNo], (error, results) => {
+      if (error) {
+        console.error('Error updating laundry status:', error);
+        return res.status(500).json({ success: false, error: 'Internal server error' });
+      }
+
+      // Send success response
+      return res.status(200).json({ success: true, message: 'Laundry submitted successfully' });
+    });
+  });
 });
+
 
 // Endpoint to get laundry history
-app.get('/getLaundryHistory', async (req, res) => {
-  const { studentEmail } = req.query;
+app.get('/getLaundry/:rollNo', (req, res) => {
+  const rollNo = req.params.rollNo;
 
-  try {
-    const connection = await connection.getConnection();
+  // Query to fetch laundry history for the student
+  const laundryQuery = `
+    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Received_Date, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
+    FROM Laundry_Instance li
+    JOIN Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
+    JOIN Student s ON la.Roll_No = s.Roll_No
+    JOIN Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
+    WHERE s.Roll_No = ?
+    ORDER BY li.Received_Date DESC
+  `;
 
-    // Fetch laundry history based on the student email
-    const [rows] = await connection.execute(
-      'SELECT * FROM laundry_submission WHERE studentEmail = ?',
-      [studentEmail]
-    );
+  // Execute the laundry query
+  connection.query(laundryQuery, [rollNo], (error, results) => {
+    if (error) {
+      console.error('Error fetching laundry history:', error);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
 
-    connection.release();
-
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error('Error fetching laundry history:', error);
-    res.status(500).send('Internal Server Error');
-  }
+    // Send the laundry history as response
+    return res.status(200).json({ success: true, laundryHistory: results });
+  });
 });
-
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
-  const { complaintText, studentEmail } = req.body;
+  const { complaintText, rollNo } = req.body;
 
-  if (!complaintText || !studentEmail) {
+  if (!complaintText || !rollNo) {
     return res.status(400).json({ message: 'Invalid request. Missing data.' });
   }
 
   // Simulating submission of complaint
   const complaintDate = new Date().toLocaleDateString();
+  const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
   const newComplaint = {
     complaintText,
-    complaintDate,
-    studentEmail,
+    formattedDate,
+    rollNo,
   };
 
   // Store complaint in the database
   connection.query(
-    'INSERT INTO student_complaint (description, date, email) VALUES (?, ?, ?)',
-    [complaintText, complaintDate, studentEmail],
+    'INSERT INTO StudentComplaint (Description, Date, Roll_No) VALUES (?, ?, ?)',
+    [complaintText, formattedDate, rollNo],
     (error, results) => {
       if (error) {
         console.error('Error during complaint submission:', error);
@@ -190,24 +206,13 @@ app.post("/submitComplaint", (req, res) => {
     }
   );
 });
-
 // Endpoint to get complaints
 app.get('/getComplaints', (req, res) => {
-  // Use the connection to get a connection
-  connection.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error getting connection from connection:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-
-    const query = 'SELECT * FROM student_complaint';
+    const query = 'SELECT * FROM StudentComplaint';
 
     // Execute the query
     connection.query(query, (error, results) => {
-      // Release the connection back to the connection
-      connection.release();
-
+      // Release the connection back to the connection pool
       if (error) {
         console.error('Error executing query:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -218,8 +223,6 @@ app.get('/getComplaints', (req, res) => {
       res.json(results);
     });
   });
-});
-
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -259,7 +262,7 @@ app.post('/postLostItem', upload.single('image'), (req, res) => {
     mimeType: req.file.mimetype,
     body: fs.createReadStream(req.file.path)
   };
-  
+
   drive.files.create({
     resource: fileMetadata,
     fields: 'id, webViewLink'
@@ -402,4 +405,69 @@ app.post("/postLaundryInfo", (req, res) => {
       }
     }
   );
+});
+
+// Endpoint to send admin message
+app.post('/sendMessageToHostel', (req, res) => {
+  const { hostelName, message, adminEmail } = req.body;
+  console.log(hostelName, message, adminEmail);   
+      // Insert admin message into AdminMessage table
+      const insertQuery = 'INSERT INTO AdminMessage (Date, Description, Hostel_ID, Admin_Email) VALUES (?, ?, ?, ?)';
+      const complaintDate = new Date().toLocaleDateString();
+      const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');    
+      connection.query(insertQuery, [formattedDate, message, hostelName, adminEmail], (error, results) => {
+          if (error) {
+            console.log("Ir is a error message")
+              console.error('Error inserting admin message:', error);
+              res.status(500).json({ error: 'Internal server error' });
+              return;
+          }
+          res.status(200).json({ message: 'Admin message sent successfully' });
+      });
+  });
+
+
+// Endpoint to fetch laundry data
+app.get('/getLaundryData', (req, res) => {
+  const query = 'SELECT * FROM Laundry_Instance';
+  connection.query(query, (error, results) => {
+      if (error) {
+          console.error('Error fetching laundry data:', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+      }
+
+      res.json(results);
+  });
+});
+
+// Endpoint to fetch hostels
+app.get('/getHostels', (req, res) => {
+  const sql = 'SELECT * FROM Hostel';
+  connection.query(sql, (error, results) => {
+      if (error) {
+          console.error('Error fetching hostels:', error);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+      }
+      res.json(results);
+  });
+});
+
+app.get('/getMessagesForHostel/:hostelName', (req, res) => {
+  const hostelName = req.params.hostelName;
+
+  // Query the database for messages for the specified hostel
+  const selectQuery = 'SELECT * FROM AdminMessage WHERE Hostel_ID = ?';
+
+  connection.query(selectQuery, [hostelName], (error, results) => {
+    if (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    // Return the messages
+    res.status(200).json(results);
+  });
 });

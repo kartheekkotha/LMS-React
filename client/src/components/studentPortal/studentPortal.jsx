@@ -1,20 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./studentPortal.css"
+import "./studentPortal.css";
 
-const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
+const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
+  const [studentDetails, setStudentDetails] = useState(null);
   const [clothesCount, setClothesCount] = useState(0);
-  const [note, setnote] = useState("");
+  const [note, setNote] = useState("");
   const [laundryHistory, setLaundryHistory] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [complaint, setComplaint] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
+  const [laundryStatus, setLaundryStatus] = useState(false);
+
+  const backendURL =
+    process.env.REACT_APP_BACKEND_URL ||
+    "https://lms-react-server.vercel.app";
+
+  useEffect(() => {
+    if (isLoggedIn && userId && userRole === "student") {
+      fetchStudentDetails(userId);
+      fetchLaundryHistory();
+    }
+  }, [isLoggedIn, userId, userRole]);
+
+  const fetchStudentDetails = async (userId) => {
+    try {
+      const response = await fetch(`${backendURL}/getStudentDetails/${userId}`);
+      if (response.ok) {
+        const student = await response.json();
+        setStudentDetails(student);
+        setLaundryStatus(student.laundry_status); 
+        await fetchLaundryHistory(student.Roll_No);
+      } else {
+        throw new Error("Failed to fetch student details");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+    }
+  };
+
+
+  const fetchLaundryHistory = async (rollNo) => {
+    try {
+      const response = await fetch(`${backendURL}/getLaundry/${rollNo}`);
+      if (response.ok) {
+        const { laundryHistory } = await response.json();
+        setLaundryHistory(laundryHistory);
+        console.log(laundryHistory)
+      } else {
+        throw new Error("Failed to fetch laundry history");
+      }
+    } catch (error) {
+      console.error("Error fetching laundry history:", error);
+    }
+  };
 
   const handleClothesSubmit = async () => {
-    if (clothesCount <= 0 || !studentEmail.trim()) {
-      toast.error("Please enter a valid number of clothes and student email!", {
+    if (
+      clothesCount <= 0 ||
+      clothesCount > 30 ||
+      !isLoggedIn ||
+      !studentDetails ||
+      userRole !== "student"
+    ) {
+      toast.error(
+        "Please enter a valid number of clothes and sign in with student credentials!",
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+          progress: undefined,
+          style: {
+            fontSize: "18px",
+            padding: "20px",
+          },
+        }
+      );
+      return;
+    }
+
+    if (laundryStatus) {
+      toast.error("You already have laundry in process!", {
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: true,
@@ -30,22 +100,23 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
       return;
     }
 
+    const rollNo = studentDetails.Roll_No;
+    const hostelId = studentDetails.Hostel_ID;
+    console.log("hostelId", hostelId)
+    console.log("rollNo", rollNo)
     try {
-      const response = await fetch("http://localhost:4000/submitLaundry", {
+      const response = await fetch(`${backendURL}/submitLaundry`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ givenClothes: clothesCount, studentEmail }),
+        body: JSON.stringify({ givenClothes: clothesCount, rollNo: rollNo, assignedHostelId: hostelId, message: note }),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        const newLaundryStatus = result.laundryStatus;
-        setLaundryHistory([newLaundryStatus, ...laundryHistory]);
-
+        await fetchLaundryHistory(); // Update laundry history after submission
         setClothesCount(0);
-        setStudentEmail("");
+        setNote("");
 
         toast.success("Your laundry has been submitted!", {
           position: "top-center",
@@ -61,42 +132,70 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
           },
         });
       } else {
-        throw new Error("Failed to submit laundry. Please try again later.");
+        throw new Error(
+          "Failed to submit laundry. Please try again later."
+        );
       }
     } catch (error) {
       console.error("Error during laundry submission:", error);
-      toast.error("Error during laundry submission. Please try again later.", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
+      toast.error(
+        "Error during laundry submission. Please try again later.",
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            fontSize: "18px",
+            padding: "20px",
+          },
+        }
+      );
     }
   };
 
-
   const handleComplaintSubmit = async () => {
+    if (
+      !isLoggedIn ||
+      userRole !== "student" ||
+      !studentDetails ||
+      complaint.trim() === ""
+    ) {
+      toast.error(
+        "Please enter a valid complaint and sign in with student credentials!",
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+          progress: undefined,
+          style: {
+            fontSize: "18px",
+            padding: "20px",
+          },
+        }
+      );
+      return;
+    }
     if (complaint.trim() !== "") {
+      const rollNo = studentDetails.Roll_No;
       try {
-        const response = await fetch("http://localhost:4000/submitComplaint", {
+        const response = await fetch(`${backendURL}/submitComplaint`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ complaintText: complaint, studentEmail }),
+          body: JSON.stringify({ complaintText: complaint, rollNo }),
         });
 
         if (response.ok) {
           // const result = await response.json();
           setComplaint("");
-          setStudentEmail("");
 
           toast.info("Your complaint has been submitted!", {
             position: "top-center",
@@ -113,77 +212,31 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
             },
           });
         } else {
-          throw new Error("Failed to submit complaint. Please try again later.");
+          throw new Error(
+            "Failed to submit complaint. Please try again later."
+          );
         }
       } catch (error) {
         console.error("Error during complaint submission:", error);
-        toast.error("Error during complaint submission. Please try again later.", {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: {
-            fontSize: "18px",
-            padding: "20px",
-          },
-        });
+        toast.error(
+          "Error during complaint submission. Please try again later.",
+          {
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            style: {
+              fontSize: "18px",
+              padding: "20px",
+            },
+          }
+        );
       }
     } else {
       toast.error("Please enter a valid complaint!", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
-    }
-  };
-
-  const handleRemoveEntry = async (index) => {
-    const entryToRemove = laundryHistory[index];
-
-    try {
-      const response = await fetch("http://localhost:4000/removeLaundry", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(entryToRemove),
-      });
-
-      if (response.ok) {
-        const updatedHistory = [...laundryHistory];
-        updatedHistory.splice(index, 1);
-        setLaundryHistory(updatedHistory);
-
-        toast.success("Laundry entry removed successfully!", {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: {
-            fontSize: "18px",
-            padding: "20px",
-          },
-        });
-      } else {
-        throw new Error("Failed to remove laundry entry. Please try again later.");
-      }
-    } catch (error) {
-      console.error("Error during removal of laundry entry:", error);
-      toast.error("Error during removal of laundry entry. Please try again later.", {
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
@@ -231,16 +284,11 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
     );
   };
 
-  
   const renderLaundryHistoryTable = () => {
-    if (laundryHistory.length === 0) {
-      return null;
-    }
-    const historyToDisplay = selectedDate ? filteredHistory : laundryHistory;
     return (
       <div className="container mt-3">
         <h3>Laundry Submission History</h3>
-        {renderDateFilterDropdown()}
+        {laundryHistory.length > 0 && renderDateFilterDropdown()}
         <table className="table">
           <thead>
             <tr>
@@ -248,26 +296,17 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
               <th>Number of Clothes</th>
               <th>Status</th>
               <th>Student Email</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {historyToDisplay.map((entry, index) => (
+            {laundryHistory.map((entry, index) => (
               <tr key={index}>
-                <td>{entry.submission_date}</td>
-                <td>{entry.given_clothes}</td>
-                <td style={{ color: getStatusColor(entry.status) }}>
-                  {entry.status}
+                <td>{entry.Received_Date}</td>
+                <td>{entry.Clothes_Given}</td>
+                <td style={{ color: getStatusColor(entry.Edit_Status) }}>
+                  {entry.Edit_Status}
                 </td>
                 <td>{entry.studentEmail}</td>
-                <td>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleRemoveEntry(index)}
-                  >
-                    Remove
-                  </button>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -275,9 +314,7 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
       </div>
     );
   };
-
-
-  const getStatusColor = (status) => {
+    const getStatusColor = (status) => {
     switch (status) {
       case "Received bag":
         return "blue";
@@ -301,47 +338,43 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
         <div className="row">
           <div className="col-md-8">
             <h2>Give your Laundry!</h2>
-            <div className="form-group">
-              <label htmlFor="studentEmail">Student Email:</label>
-              <input
-                type="text"
-                className="form-control"
-                id="studentEmail"
-                value={studentEmail}
-                onChange={(e) => setStudentEmail(e.target.value)}
-                style={{ marginTop: 10, marginBottom: 10 }}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="clothesCount">
-                Number of Clothes to be Given:
-              </label>
-              <input
-                type="number"
-                className="form-control"
-                id="clothesCount"
-                value={clothesCount}
-                onChange={(e) => setClothesCount(parseInt(e.target.value))}
-                style={{ marginTop: 10, marginBottom: 10 }}
-              />
-            </div>
+            {laundryStatus ? (
+              <p>Your laundry is already in process.</p>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label htmlFor="clothesCount">
+                    Number of Clothes to be Given:
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="clothesCount"
+                    value={clothesCount}
+                    onChange={(e) => setClothesCount(parseInt(e.target.value))}
+                    style={{ marginTop: 10, marginBottom: 10 }}
+                  />
+                </div>
 
-            <div className="form-group">
-              <label htmlFor="note">
-                Note:
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="note"
-                value={note}
-                onChange={(e) => setnote((e.target.value))}
-                style={{ marginTop: 10, marginBottom: 10 }}
-              />
-            </div>
-            <button className="btn btn-sub" onClick={handleClothesSubmit}>
-              Submit
-            </button>
+                <div className="form-group">
+                  <label htmlFor="note">Note:</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    style={{ marginTop: 10, marginBottom: 10 }}
+                  />
+                </div>
+                <button
+                  className="btn btn-sub"
+                  onClick={handleClothesSubmit}
+                >
+                  Submit
+                </button>
+              </>
+            )}
             {renderLaundryHistoryTable()}
           </div>
           <div className="col-md-4">
@@ -363,7 +396,7 @@ const StudentPortal = ({ isLoggedIn, userId , userRole}) => {
                   className="btn btn-comp"
                   onClick={handleComplaintSubmit}
                 >
-                  Submit 
+                  Submit
                 </button>
               </div>
             </div>
