@@ -164,223 +164,229 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
       }
     };
   
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    };
 
 
-  
-  const renderFiltersAndSort = () => (
-    <div className="mb-3 d-flex justify-content-between align-items-center">
-      <div className="d-flex">
-        <label className="mx-2 mt-3">Filter by:</label>
-        <select
-          className="form-select"
-          onChange={(e) => setFilterHostel(e.target.value)}
-          value={filterHostel}
-        >
-          <option value="">All Hostels</option>
-          {/* Add hostel options dynamically based on available hostels */}
-          {Array.from(
-            new Set(laundryData.map((entry) => entry.Assigned_Hostel_ID))
-          ).map((hostel, index) => (
-            <option key={index} value={hostel}>
-              {hostel}
-            </option>
-          ))}
-        </select>
 
-        <label className="mx-2 mt-3"></label>
-        <select
-          className="form-select"
-          onChange={(e) => setFilterDate(e.target.value)}
-          value={filterDate}
-        >
-          <option value="">All Dates</option>
-          {/* Add date options dynamically based on available dates */}
-          {Array.from(
-            new Set(laundryData.map((entry) => entry.Received_Date))
-          ).map((date, index) => (
-            <option key={index} value={date}>
-              {date}
-            </option>
-          ))}
-        </select>
+const renderLaundryTable = () => {
+  // Apply filters to the data
+  let filteredData = [...laundryData];
 
-        <label className="mx-2 mt-3"></label>
-        <select
-          className="form-select"
-          onChange={(e) => setFilterStatus(e.target.value)}
-          value={filterStatus}
-        >
-          <option value="">All Statuses</option>
-          {/* Add status options dynamically based on available statuses */}
-          {Array.from(
-            new Set(laundryData.map((entry) => entry.Edit_Status))
-          ).map((status, index) => (
-            <option key={index} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+  if (filterHostel) {
+    filteredData = filteredData.filter(
+      (entry) => entry.Assigned_Hostel_ID === filterHostel
+    );
+  }
+
+  if (filterDate) {
+    // Convert filterDate and entry.Received_Date to the same format before comparison
+    filteredData = filteredData.filter(
+      (entry) => formatDate(entry.Received_Date) === filterDate
+    );
+  }
+
+  if (filterStatus) {
+    filteredData = filteredData.filter(
+      (entry) => entry.Edit_Status === filterStatus
+    );
+  }
+
+  // Apply sorting
+  if (sortBy && sortOrder) {
+    filteredData = filteredData.sort((a, b) => {
+      const valueA = a[sortBy];
+      const valueB = b[sortBy];
+
+      if (sortOrder === "asc") {
+        return valueA.localeCompare(valueB, undefined, { numeric: true });
+      } else {
+        return valueB.localeCompare(valueA, undefined, { numeric: true });
+      }
+    });
+  }
+
+  return (
+    <div className="row mt-3">
+      <div className="col-md-9">
+        <h3>Laundry Information</h3>
+        {renderFiltersAndSort()}
+        <table className="table mt-4">
+          <thead>
+            <tr>
+              <th>Hostel Name</th>
+              <th>Date Received</th>
+              <th>Student</th>
+              <th>Clothes Received</th>
+              <th>Status</th>
+              <th>Edit Status</th>
+              <th>Return Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((entry, index) => (
+              <tr key={index}>
+                <td>{entry.Assigned_Hostel_ID}</td>
+                <td>{formatDate(entry.Received_Date)}</td>
+                <td
+                  onClick={() => handleViewDetails(entry, index)}
+                  style={{ cursor: "pointer", color: "#2026d2" }}
+                >
+                  {entry.studentEmail}
+                </td>
+                <td>{entry.Clothes_Given}</td>
+                <td style={{ backgroundColor: getStatusColor(entry.status) }}>
+                  {entry.Edit_Status}
+                </td>
+                <td>
+                  <div className="input-group">
+                    <select
+                      className="form-select"
+                      onChange={(e) =>
+                        handleEditStatus(index, e.target.value)
+                      }
+                      value={entry.status}
+                    >
+                      <option value="Received">Received</option>
+                      <option value="Washing">Washing</option>
+                      <option value="Drying">Drying</option>
+                      <option value="Ready to Collect">Ready to Collect</option>
+                    </select>
+                  </div>
+                </td>
+                <td>{entry.returnDate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      <div className="d-flex">
-        <label className="mx-2">Sort By:</label>
-        <select
-          className="form-select"
-          onChange={(e) => handleSort(e.target.value)}
-          value={sortBy}
-        >
-          <option value="">None</option>
-          <option value="hostel">Hostel</option>
-          <option value="date">Date</option>
-          <option value="status">Status</option>
-        </select>
-
-        <label className="mx-2 mt-3">Order:</label>
-        <select
-          className="form-select"
-          onChange={(e) => setSortOrder(e.target.value)}
-          value={sortOrder}
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
+      <div className="col-md-3">
+        {/* Message Box */}
+        <div className="card">
+          <div className="card-body">
+            <h4>Send Message to Hostel</h4>
+            <div className="form-group">
+              <label htmlFor="messageHostel">Hostel:</label>
+              <select
+                className="form-control"
+                id="messageHostel"
+                onChange={(e) => setMessageHostel(e.target.value)}
+                value={messageHostel}
+              >
+                <option value="">Select Hostel</option>
+                {/* Use the hostels data fetched from the backend */}
+                {hostels.map((hostel, index) => (
+                  <option key={index} value={hostel.Hostel_ID}>
+                    {hostel.Hostel_Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="adminMessage">Message:</label>
+              <textarea
+                className="form-control"
+                id="adminMessage"
+                rows="3"
+                value={adminMessage}
+                onChange={(e) => setAdminMessage(e.target.value)}
+              ></textarea>
+            </div>
+            <button className="btn btn-send" onClick={handleSendMessage}>
+              Send Message
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
+};
 
-  const renderLaundryTable = () => {
-    // Apply filters to the data
-    let filteredData = [...laundryData];
+// Adjust the function that renders the filter and sort options
+const renderFiltersAndSort = () => (
+  <div className="mb-3 d-flex justify-content-between align-items-center">
+    <div className="d-flex">
+      <label className="mx-2 mt-3">Filter by:</label>
+      <select
+        className="form-select"
+        onChange={(e) => setFilterHostel(e.target.value)}
+        value={filterHostel}
+      >
+        <option value="">All Hostels</option>
+        {/* Add hostel options dynamically based on available hostels */}
+        {Array.from(
+          new Set(laundryData.map((entry) => entry.Assigned_Hostel_ID))
+        ).map((hostel, index) => (
+          <option key={index} value={hostel}>
+            {hostel}
+          </option>
+        ))}
+      </select>
 
-    if (filterHostel) {
-      filteredData = filteredData.filter(
-        (entry) => entry.hostelName === filterHostel
-      );
-    }
+      <label className="mx-2 mt-3"></label>
+      <select
+        className="form-select"
+        onChange={(e) => setFilterDate(e.target.value)}
+        value={filterDate}
+      >
+        <option value="">All Dates</option>
+        {/* Add date options dynamically based on available dates */}
+        {Array.from(
+          new Set(laundryData.map((entry) => formatDate(entry.Received_Date)))
+        ).map((date, index) => (
+          <option key={index} value={date}>
+            {date}
+          </option>
+        ))}
+      </select>
 
-    if (filterDate) {
-      
-      filteredData = filteredData.filter(
-        (entry) => entry.dateReceived === filterDate
-      );
-    }
+      <label className="mx-2 mt-3"></label>
+      <select
+        className="form-select"
+        onChange={(e) => setFilterStatus(e.target.value)}
+        value={filterStatus}
+      >
+        <option value="">All Statuses</option>
+        {/* Add status options dynamically based on available statuses */}
+        {Array.from(
+          new Set(laundryData.map((entry) => entry.Edit_Status))
+        ).map((status, index) => (
+          <option key={index} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </div>
 
-    if (filterStatus) {
-      filteredData = filteredData.filter(
-        (entry) => entry.status === filterStatus
-      );
-    }
+    <div className="d-flex">
+      <label className="mx-2">Sort By:</label>
+      <select
+        className="form-select"
+        onChange={(e) => setSortBy(e.target.value)}
+        value={sortBy}
+      >
+        <option value="">None</option>
+        <option value="Assigned_Hostel_ID">Hostel</option>
+        <option value="Received_Date">Date</option>
+        <option value="Edit_Status">Status</option>
+      </select>
 
-    // Apply sorting
-    if (sortBy && sortOrder) {
-      filteredData = filteredData.sort((a, b) => {
-        const valueA = a[sortBy];
-        const valueB = b[sortBy];
-
-        if (sortOrder === "asc") {
-          return valueA.localeCompare(valueB, undefined, { numeric: true });
-        } else {
-          return valueB.localeCompare(valueA, undefined, { numeric: true });
-        }
-      });
-    }
-
-    return (
-      <div className="row mt-3">
-        <div className="col-md-9">
-          <h3>Laundry Information</h3>
-          {renderFiltersAndSort()}
-          <table className="table mt-4">
-            <thead>
-              <tr>
-                <th>Hostel Name</th>
-                <th>Date Received</th>
-                <th>Student</th>
-                <th>Clothes Received</th>
-                <th>Status</th>
-                <th>Edit Status</th>
-                <th>Return Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((entry, index) => (
-                <tr key={index}>
-                  <td>{entry.Assigned_Hostel_ID}</td>
-                  <td>{entry.Received_Date}</td>
-                  <td
-                    onClick={() => handleViewDetails(index)}
-                    style={{ cursor: "pointer", color: "#2026d2" }}
-                  >
-                    {entry.student}
-                  </td>
-                  <td>{entry.Clothes_Given}</td>
-                  <td style={{ backgroundColor: getStatusColor(entry.status)}}>
-                    {entry.Edit_Status}
-                  </td>
-                  <td>
-                    <div className="input-group">
-                      <select
-                        className="form-select"
-                        onChange={(e) =>
-                          handleEditStatus(index, e.target.value)
-                        }
-                        value={entry.status}
-                      >
-                        <option value="Received">Received</option>
-                        <option value="Washing">Washing</option>
-                        <option value="Drying">Drying</option>
-                        <option value="Ready to Collect">Ready to Collect</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td>{entry.returnDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="col-md-3">
-  {/* Message Box */}
-  <div className="card">
-    <div className="card-body">
-      <h4>Send Message to Hostel</h4>
-      <div className="form-group">
-        <label htmlFor="messageHostel">Hostel:</label>
-        <select
-          className="form-control"
-          id="messageHostel"
-          onChange={(e) => setMessageHostel(e.target.value)}
-          value={messageHostel}
-        >
-          <option value="">Select Hostel</option>
-          {/* Use the hostels data fetched from the backend */}
-          {hostels.map((hostel, index) => (
-            <option key={index} value={hostel.Hostel_ID}>
-              {hostel.Hostel_Name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="form-group">
-        <label htmlFor="adminMessage">Message:</label>
-        <textarea
-          className="form-control"
-          id="adminMessage"
-          rows="3"
-          value={adminMessage}
-          onChange={(e) => setAdminMessage(e.target.value)}
-        ></textarea>
-      </div>
-      <button className="btn btn-send" onClick={handleSendMessage}>
-        Send Message
-      </button>
+      <label className="mx-2 mt-3">Order:</label>
+      <select
+        className="form-select"
+        onChange={(e) => setSortOrder(e.target.value)}
+        value={sortOrder}
+      >
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
     </div>
   </div>
-</div>
+);
 
-      </div>
-    );
-  };
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -409,58 +415,95 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
     }
   };
 
-  const handleViewDetails = (index) => {
-    const hostelName = laundryData[index].hostelName;
-    const details = laundryData[index].submissions.map((submission, idx) => (
-      <tr key={idx}>
-        <td>{submission.name}</td>
-        <td>{submission.email}</td>
-        <td>{submission.hostel}</td>
-        <td>{submission.room}</td>
-        <td>{submission.phone}</td>
-        <td>{submission.note}</td>
-      </tr>
-    ));
-
-    // Show details in a new table
-    toast.info(
-      <div>
-        <h3 className="toast-title">Student Details</h3>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Hostel</th>
-              <th>Room</th>
-              <th>Phone</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>{details}</tbody>
-        </table>
-      </div>,
-      {
-        position: "top-left",
-        autoClose: false,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          marginTop:"100px",
-          marginLeft:"300px",
-          fontSize: "18px",
-          padding: "10px",
-          height:"400px",
-          width:"1000px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-          borderRadius:"5px"
+  const handleViewDetails = async (entry, index) => {
+    const studentEmail = entry.studentEmail; // Get the student email from the clicked entry
+  
+    try {
+      // Fetch student details from the backend using the student email
+      const response = await fetch(`${backendURL}/getStudentDetailsByEmail`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ email: studentEmail }),
+      });
+  
+      if (response.ok) {
+        const { studentDetails } = await response.json();
+        // Render student details in a table
+        const details = (
+          <tr>
+            <td>{studentDetails.Name}</td>
+            <td>{studentDetails.Email}</td>
+            <td>{studentDetails.Hostel_Name}</td>
+            <td>{studentDetails.Room_No}</td>
+            <td>{studentDetails.Phone_No}</td>
+            <td>{studentDetails.Student_Message}</td>
+          </tr>
+        );
+        console.log("student details: ",details);
+        // Show details in a new table
+        toast.info(
+          <div>
+            <h3 className="toast-title">Student Details</h3>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Hostel</th>
+                  <th>Room</th>
+                  <th>Phone</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>{details}</tbody>
+            </table>
+          </div>,
+          {
+            position: "top-left",
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            style: {
+              marginTop: "100px",
+              marginLeft: "300px",
+              fontSize: "18px",
+              padding: "10px",
+              height: "400px",
+              width: "1000px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+              borderRadius: "5px",
+            },
+          }
+        );
+      } else {
+        throw new Error("Failed to fetch student details");
       }
-    );
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      toast.error(
+        "Error fetching student details. Please try again later.",
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            fontSize: "18px",
+            padding: "20px",
+          },
+        }
+      );
+    }
   };
+  
 
   return (
     <div>

@@ -148,33 +148,6 @@ app.post('/submitLaundry', (req, res) => {
 });
 
 
-// Endpoint to get laundry history
-app.get('/getLaundry/:rollNo', (req, res) => {
-  const rollNo = req.params.rollNo;
-
-  // Query to fetch laundry history for the student
-  const laundryQuery = `
-    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Return_Date, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
-    FROM Laundry_Instance li
-    JOIN Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
-    JOIN Student s ON la.Roll_No = s.Roll_No
-    JOIN Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
-    WHERE s.Roll_No = ?
-    ORDER BY li.Received_Date DESC
-  `;
-
-  // Execute the laundry query
-  connection.query(laundryQuery, [rollNo], (error, results) => {
-    if (error) {
-      console.error('Error fetching laundry history:', error);
-      return res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-
-    // Send the laundry history as response
-    return res.status(200).json({ success: true, laundryHistory: results });
-  });
-});
-
 
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
@@ -441,20 +414,110 @@ app.post('/sendMessageToHostel', (req, res) => {
       });
   });
 
+  
+// Endpoint to get laundry history
+app.get('/getLaundry/:rollNo', (req, res) => {
+  const rollNo = req.params.rollNo;
+
+  // Query to fetch laundry history for the student
+  const laundryQuery = `
+    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Return_Date, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
+    FROM Laundry_Instance li
+    JOIN Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
+    JOIN Student s ON la.Roll_No = s.Roll_No
+    JOIN Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
+    WHERE s.Roll_No = ?
+    ORDER BY li.Received_Date DESC
+  `;
+
+  // Execute the laundry query
+  connection.query(laundryQuery, [rollNo], (error, results) => {
+    if (error) {
+      console.error('Error fetching laundry history:', error);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+
+    // Send the laundry history as response
+    return res.status(200).json({ success: true, laundryHistory: results });
+  });
+});
+
+
+// Endpoint to fetch student details by email
+app.get('/getStudentDetailsByEmail', (req, res) => {
+  const email = req.params.email;
+
+  const query = `
+    SELECT 
+      s.*, 
+      li.Student_Message,
+      h.Hostel_Name
+    FROM 
+      Student s
+    JOIN 
+      Laundry_Assignment la ON s.Roll_No = la.Roll_No
+    JOIN 
+      Laundry_Instance li ON la.Bag_ID = li.Bag_ID
+    JOIN 
+      Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
+    WHERE 
+      s.Email = ?
+  `;
+
+  connection.query(query, [email], (error, results) => {
+    if (error) {
+      console.error('Error fetching student details:', error);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Student not found' });
+      return;
+    }
+
+    res.json(results[0]); // Assuming email is unique, so only one result is expected
+  });
+});
 
 // Endpoint to fetch laundry data
 app.get('/getLaundryData', (req, res) => {
-  const query = 'SELECT * FROM Laundry_Instance';
+  const query = `
+    SELECT 
+      li.*, 
+      s.Email AS studentEmail
+    FROM 
+      Laundry_Instance li
+    JOIN 
+      Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
+    JOIN 
+      Student s ON la.Roll_No = s.Roll_No
+  `;
+  
   connection.query(query, (error, results) => {
-      if (error) {
-          console.error('Error fetching laundry data:', error);
-          res.status(500).json({ error: 'Internal server error' });
-          return;
-      }
+    if (error) {
+      console.error('Error fetching laundry data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
 
-      res.json(results);
+    res.json(results);
   });
 });
+
+// Endpoint to fetch laundry data
+// app.get('/getLaundryData', (req, res) => {
+//   const query = 'SELECT * FROM Laundry_Instance';
+//   connection.query(query, (error, results) => {
+//       if (error) {
+//           console.error('Error fetching laundry data:', error);
+//           res.status(500).json({ error: 'Internal server error' });
+//           return;
+//       }
+
+//       res.json(results);
+//   });
+// });
 
 // Endpoint to fetch hostels
 app.get('/getHostels', (req, res) => {
