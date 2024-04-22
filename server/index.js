@@ -111,9 +111,8 @@ app.post('/submitLaundry', (req, res) => {
     return res.status(400).json({ error: 'Invalid input. Please provide valid clothes count and student email.' });
   }
 
-  // Formatting the date
-  const laundryDate = new Date().toLocaleDateString();
-  const formattedDate = moment(laundryDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  // Getting the current date
+  const laundryDate = new Date().toISOString().split('T')[0]; // Get the current date in 'YYYY-MM-DD' format
   const editStatus = 'Submitted'; // Initial status
 
   // Query to insert laundry instance into database
@@ -126,7 +125,7 @@ app.post('/submitLaundry', (req, res) => {
   `;
 
   // Execute the instance insertion query
-  connection.query(instanceInsertQuery, [rollNo, givenClothes, formattedDate, assignedHostelId, editStatus, message], (error, results) => {
+  connection.query(instanceInsertQuery, [rollNo, givenClothes, laundryDate, assignedHostelId, editStatus, message], (error, results) => {
     if (error) {
       console.error('Error submitting laundry:', error);
       return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -175,6 +174,8 @@ app.get('/getLaundry/:rollNo', (req, res) => {
     return res.status(200).json({ success: true, laundryHistory: results });
   });
 });
+
+
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
   const { complaintText, rollNo } = req.body;

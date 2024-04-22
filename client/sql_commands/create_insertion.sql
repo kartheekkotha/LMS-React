@@ -43,15 +43,16 @@ CREATE TABLE Laundry_Instance (
     Bag_ID INT,
     Clothes_Given INT,
     Received_Date DATE,
-    Return_Date DATE,
+    Return_Date DATE DEFAULT NULL, -- Set default return date to NULL
     Assigned_Hostel_ID INT,
     Admin_Email VARCHAR(255),
     Edit_Status VARCHAR(255),
-    Student_Message TEXT, -- Added new column for student message
+    Student_Message TEXT,
     FOREIGN KEY (Bag_ID) REFERENCES Laundry_Assignment(Bag_ID),
     FOREIGN KEY (Assigned_Hostel_ID) REFERENCES Hostel(Hostel_ID),
     FOREIGN KEY (Admin_Email) REFERENCES Admin(Email)
 );
+
 
 
 CREATE TABLE LostAndFound (

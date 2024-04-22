@@ -8,8 +8,6 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
   const [clothesCount, setClothesCount] = useState(0);
   const [note, setNote] = useState("");
   const [laundryHistory, setLaundryHistory] = useState([]);
-  const [filteredHistory, setFilteredHistory] = useState([]);
-  const [selectedDate, setSelectedDate] = useState("");
   const [complaint, setComplaint] = useState("");
   const [laundryStatus, setLaundryStatus] = useState(false);
 
@@ -40,14 +38,12 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
     }
   };
 
-
   const fetchLaundryHistory = async (rollNo) => {
     try {
       const response = await fetch(`${backendURL}/getLaundry/${rollNo}`);
       if (response.ok) {
         const { laundryHistory } = await response.json();
         setLaundryHistory(laundryHistory);
-        console.log(laundryHistory)
       } else {
         throw new Error("Failed to fetch laundry history");
       }
@@ -102,8 +98,6 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
 
     const rollNo = studentDetails.Roll_No;
     const hostelId = studentDetails.Hostel_ID;
-    console.log("hostelId", hostelId)
-    console.log("rollNo", rollNo)
     try {
       const response = await fetch(`${backendURL}/submitLaundry`, {
         method: "POST",
@@ -194,7 +188,6 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
         });
 
         if (response.ok) {
-          // const result = await response.json();
           setComplaint("");
 
           toast.info("Your complaint has been submitted!", {
@@ -251,44 +244,11 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
       });
     }
   };
-
-  const handleFilterByDate = (date) => {
-    setSelectedDate(date);
-    const filtered = laundryHistory.filter(
-      (entry) => entry.submission_date === date
-    );
-    setFilteredHistory(filtered);
-  };
-
-  const renderDateFilterDropdown = () => {
-    const uniqueDates = [
-      ...new Set(laundryHistory.map((entry) => entry.submission_date)),
-    ];
-    return (
-      <div className="form-group">
-        <label htmlFor="dateFilter">Filter by Date:</label>
-        <select
-          className="form-control"
-          id="dateFilter"
-          onChange={(e) => handleFilterByDate(e.target.value)}
-          value={selectedDate}
-        >
-          <option value="">All Dates</option>
-          {uniqueDates.map((date, index) => (
-            <option key={index} value={date}>
-              {date}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  };
-
+  
   const renderLaundryHistoryTable = () => {
     return (
       <div className="container mt-3">
         <h3>Laundry Submission History</h3>
-        {laundryHistory.length > 0 && renderDateFilterDropdown()}
         <table className="table">
           <thead>
             <tr>
@@ -301,12 +261,12 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
           <tbody>
             {laundryHistory.map((entry, index) => (
               <tr key={index}>
-                <td>{entry.Received_Date}</td>
+                <td>{formatDate(entry.Received_Date)}</td>
                 <td>{entry.Clothes_Given}</td>
                 <td style={{ color: getStatusColor(entry.Edit_Status) }}>
                   {entry.Edit_Status}
                 </td>
-                <td>{entry.returnDate}</td>
+                <td>{formatDate(entry.Return_Date)}</td>
               </tr>
             ))}
           </tbody>
@@ -314,7 +274,13 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
       </div>
     );
   };
-    const getStatusColor = (status) => {
+  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+  
+  const getStatusColor = (status) => {
     switch (status) {
       case "Received bag":
         return "blue";
@@ -328,7 +294,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
         return "black";
     }
   };
-
+  
   return (
     <div>
       <header>
@@ -355,7 +321,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
                     style={{ marginTop: 10, marginBottom: 10 }}
                   />
                 </div>
-
+  
                 <div className="form-group">
                   <label htmlFor="note">Note:</label>
                   <input
@@ -406,6 +372,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
       </div>
     </div>
   );
-};
-
-export default StudentPortal;
+  };
+  
+  export default StudentPortal;
+  
