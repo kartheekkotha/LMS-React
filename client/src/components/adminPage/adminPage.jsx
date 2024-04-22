@@ -179,7 +179,7 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
           <option value="">All Hostels</option>
           {/* Add hostel options dynamically based on available hostels */}
           {Array.from(
-            new Set(laundryData.map((entry) => entry.hostelName))
+            new Set(laundryData.map((entry) => entry.Assigned_Hostel_ID))
           ).map((hostel, index) => (
             <option key={index} value={hostel}>
               {hostel}
@@ -196,7 +196,7 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
           <option value="">All Dates</option>
           {/* Add date options dynamically based on available dates */}
           {Array.from(
-            new Set(laundryData.map((entry) => entry.dateReceived))
+            new Set(laundryData.map((entry) => entry.Received_Date))
           ).map((date, index) => (
             <option key={index} value={date}>
               {date}
@@ -213,7 +213,7 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
           <option value="">All Statuses</option>
           {/* Add status options dynamically based on available statuses */}
           {Array.from(
-            new Set(laundryData.map((entry) => entry.status))
+            new Set(laundryData.map((entry) => entry.Edit_Status))
           ).map((status, index) => (
             <option key={index} value={status}>
               {status}
@@ -305,17 +305,17 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
             <tbody>
               {filteredData.map((entry, index) => (
                 <tr key={index}>
-                  <td>{entry.hostelName}</td>
-                  <td>{entry.dateReceived}</td>
+                  <td>{entry.Assigned_Hostel_ID}</td>
+                  <td>{entry.Received_Date}</td>
                   <td
                     onClick={() => handleViewDetails(index)}
                     style={{ cursor: "pointer", color: "#2026d2" }}
                   >
                     {entry.student}
                   </td>
-                  <td>{entry.clothesReceived}</td>
+                  <td>{entry.Clothes_Given}</td>
                   <td style={{ backgroundColor: getStatusColor(entry.status)}}>
-                    {entry.status}
+                    {entry.Edit_Status}
                   </td>
                   <td>
                     <div className="input-group">
