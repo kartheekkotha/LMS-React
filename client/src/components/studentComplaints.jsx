@@ -4,6 +4,7 @@ import "./adminAnnouncements.css";
 
 const Complaints = ({ isLoggedIn, userId, userRole }) => {
   const [complaints, setComplaints] = useState([]);
+  const [sortOrder, setSortOrder] = useState('desc'); // Default to descending order
   const [selectedDate, setSelectedDate] = useState('');
   
   const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
@@ -30,7 +31,18 @@ const Complaints = ({ isLoggedIn, userId, userRole }) => {
   };
 
   const renderItems = () => {
-    const sortedItems = complaints.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+    let sortedItems = complaints;
+
+    // Sort items based on sortOrder
+    sortedItems.sort((a, b) => {
+      const dateA = new Date(a.Date);
+      const dateB = new Date(b.Date);
+      if (sortOrder === 'asc') {
+        return dateA - dateB;
+      } else {
+        return dateB - dateA;
+      }
+    });
 
     const filteredItems =
       selectedDate === ''
@@ -47,15 +59,15 @@ const Complaints = ({ isLoggedIn, userId, userRole }) => {
             <Card.Text>{item.Description}</Card.Text>
           </Card.Body>
           <Card.Footer className="text-muted">
-            Posted on {item.Date}
+            Posted on {formatDateTime(item.Date)}
           </Card.Footer>
         </Card>
       </ListGroup.Item>
     ));
   };
 
-  const handleDateFilter = (date) => {
-    setSelectedDate(date);
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
   };
 
   const renderDateFilterDropdown = () => {
@@ -67,14 +79,23 @@ const Complaints = ({ isLoggedIn, userId, userRole }) => {
           {selectedDate ? `Filtering by ${selectedDate}` : 'Filter by Date'}
         </Dropdown.Toggle>
         <Dropdown.Menu>
+          <Dropdown.Item onClick={toggleSortOrder}>
+            Sort by Date ({sortOrder === 'asc' ? 'Ascending' : 'Descending'})
+          </Dropdown.Item>
           {uniqueDates.map((date, index) => (
-            <Dropdown.Item key={index} onClick={() => handleDateFilter(date)}>
+            <Dropdown.Item key={index} onClick={() => setSelectedDate(date)}>
               {date}
             </Dropdown.Item>
           ))}
         </Dropdown.Menu>
       </Dropdown>
     );
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    const dateTime = new Date(dateTimeString);
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+    return dateTime.toLocaleString('en-US', options);
   };
 
   if (!isLoggedIn) {

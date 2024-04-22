@@ -4,6 +4,7 @@ import "./adminAnnouncements.css";
 
 const Announcements = ({ isLoggedIn, userId, userRole }) => {
   const [messages, setMessages] = useState([]);
+  const [sortOrder, setSortOrder] = useState('desc'); // Default to descending order
   const [selectedDate, setSelectedDate] = useState('');
   const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
 
@@ -40,10 +41,24 @@ const Announcements = ({ isLoggedIn, userId, userRole }) => {
     }
   };
 
-  // Sort messages by date in descending order
-  const sortedMessages = [...messages].sort((a, b) => new Date(b.Date) - new Date(a.Date));
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  };
 
   const renderMessages = () => {
+    let sortedMessages = [...messages];
+
+    // Sort messages based on sortOrder
+    sortedMessages.sort((a, b) => {
+      const dateA = new Date(a.Date);
+      const dateB = new Date(b.Date);
+      if (sortOrder === 'asc') {
+        return dateA - dateB;
+      } else {
+        return dateB - dateA;
+      }
+    });
+
     // Filter messages based on the selected date
     const filteredMessages = selectedDate
       ? sortedMessages.filter((message) => message.Date === selectedDate)
@@ -55,11 +70,17 @@ const Announcements = ({ isLoggedIn, userId, userRole }) => {
           <Card.Body>
             <Card.Title>{message.Description}</Card.Title>
             {/* Assuming 'Date' in the message object represents the announcement date */}
-            <Card.Footer className="text-muted">{message.Date}</Card.Footer>
+            <Card.Footer className="text-muted">{formatDateTime(message.Date)}</Card.Footer>
           </Card.Body>
         </Card>
       </ListGroup.Item>
     ));
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    const dateTime = new Date(dateTimeString);
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+    return dateTime.toLocaleString('en-US', options);
   };
 
   const handleDateFilter = (date) => {
@@ -75,8 +96,8 @@ const Announcements = ({ isLoggedIn, userId, userRole }) => {
           {selectedDate ? `Filtering by ${selectedDate}` : 'Filter by Date'}
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          <Dropdown.Item onClick={() => handleDateFilter('')}>
-            Show All Dates
+          <Dropdown.Item onClick={toggleSortOrder}>
+            Sort by Date ({sortOrder === 'asc' ? 'Ascending' : 'Descending'})
           </Dropdown.Item>
           {uniqueDates.map((date, index) => (
             <Dropdown.Item key={index} onClick={() => handleDateFilter(date)}>

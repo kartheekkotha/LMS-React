@@ -6,187 +6,166 @@ import "./adminPage.css"
 const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
   const backendURL = process.env.REACT_APP_BACKEND_URL || "https://lms-react-server.vercel.app";
   const [hostels, setHostels] = useState([]);
-
+  const [laundryData, setLaundryData] = useState([]);
+  const [filterHostel, setFilterHostel] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [sortBy, setSortBy] = useState(''); // 'hostel', 'date', 'status'
+  const [sortOrder, setSortOrder] = useState(''); // 'asc', 'desc'
+  const [messageHostel, setMessageHostel] = useState('');
+  const [adminMessage, setAdminMessage] = useState('');
   
-  const fetchHostels = async () => {
-    try {
-      const response = await fetch(`${backendURL}/getHostels`);
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+ 
+  
+    useEffect(() => {
+      if (isLoggedIn && userRole === 'staff') {
+        fetchLaundryData();
+        fetchHostels();
       }
-      const data = await response.json();
-      console.log("Hostels:", data);
-      setHostels(data);
-    } catch (error) {
-      console.error("Error fetching hostels:", error);
-      toast.error("Error fetching hostels", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
-    }
-  };
+    }, [isLoggedIn, userRole]);
   
-  useEffect(() => {
-    fetchHostels();
-  }, []);
-  const [laundryData, setLaundryData] = useState([
-    {
-      hostelName: "Hostel 2B",
-      dateReceived: "2023-11-09",
-      student: "ab123",
-      clothesReceived: 15,
-      status: "Washing",
-      returnDate: "2023-18-09",
-      submissions: [
-        {
-          name: "John Doe",
-          email: "ab123",
-          hostel: "2B",
-          room: "502",
-          phone: "123-456-7890",
-          note: "winter clotes to be washed carefully"
-        },
-        
-      ],
-    },
-    {
-      hostelName: "Hostel B",
-      dateReceived: "2023-11-09",
-      student: "ty491",
-      clothesReceived: 20,
-      status: "Washing",
-      returnDate: "2023-18-09",
-      submissions: [
-        {
-          name: "John Doe",
-          email: "ty491",
-          hostel: "B",
-          room: "502",
-          phone: "123-456-7890",
-          note: "winter clotes to be washed carefully"
-        },
-        // Add more submissions as needed
-      ],
-    },
-    // Add more data as needed
-  ]);
-
-  const [filterHostel, setFilterHostel] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-
-  const [sortBy, setSortBy] = useState(""); // 'hostel', 'date', 'status'
-  const [sortOrder, setSortOrder] = useState(""); // 'asc', 'desc'
-
-  const [messageHostel, setMessageHostel] = useState("");
-  const [adminMessage, setAdminMessage] = useState("");
-
-  const handleEditStatus = (index, newStatus) => {
-    const updatedLaundryData = [...laundryData];
-    updatedLaundryData[index].status = newStatus;
-    if (newStatus === "Ready to Collect") {
-      // Update returnDate to current date when status changes to Ready to Collect
-      const currentDate = new Date().toISOString().split('T')[0];
-      updatedLaundryData[index].returnDate = currentDate;
-    }
-    setLaundryData(updatedLaundryData);
-    toast.success(
-      `Status updated for ${updatedLaundryData[index].hostelName}`,
-      {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
+    const fetchLaundryData = async () => {
+      try {
+        const response = await fetch(`${backendURL}/getLaundryData`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch laundry data');
+        }
+        const data = await response.json();
+        console.log(data);
+        setLaundryData(data);
+      } catch (error) {
+        console.error('Error fetching laundry data:', error.message);
+        toast.error('Error fetching laundry data');
       }
-    );
-  };
+    };
+  
+    // const [laundryData, setLaundryData] = useState([
+    //   {
+    //     hostelName: "Hostel 2B",
+    //     dateReceived: "2023-11-09",
+    //     student: "ab123",
+    //     clothesReceived: 15,
+    //     status: "Washing",
+    //     returnDate: "2023-18-09",
+    //     submissions: [
+    //       {
+    //         name: "John Doe",
+    //         email: "ab123",
+    //         hostel: "2B",
+    //         room: "502",
+    //         phone: "123-456-7890",
+    //         note: "winter clotes to be washed carefully"
+    //       },
+          
+    //     ],
+    //   },
+    //   {
+    //     hostelName: "Hostel B",
+    //     dateReceived: "2023-11-09",
+    //     student: "ty491",
+    //     clothesReceived: 20,
+    //     status: "Washing",
+    //     returnDate: "2023-18-09",
+    //     submissions: [
+    //       {
+    //         name: "John Doe",
+    //         email: "ty491",
+    //         hostel: "B",
+    //         room: "502",
+    //         phone: "123-456-7890",
+    //         note: "winter clotes to be washed carefully"
+    //       },
+    //       // Add more submissions as needed
+    //     ],
+    //   },
+    //   // Add more data as needed
+    // ]);
+
+    const fetchHostels = async () => {
+      try {
+        const response = await fetch(`${backendURL}/getHostels`);
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        console.log("Hostels:", data);
+        setHostels(data);
+      } catch (error) {
+        console.error("Error fetching hostels:", error);
+        toast.error("Error fetching hostels", {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            fontSize: "18px",
+            padding: "20px",
+          },
+        });
+      }
+     };
+  
+    const handleEditStatus = async (index, newStatus) => {
+      try {
+        const updatedLaundryData = [...laundryData];
+        updatedLaundryData[index].status = newStatus;
+  
+        const response = await fetch(`${backendURL}/updateLaundryStatus`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bagId: updatedLaundryData[index].bag_id,
+            status: newStatus,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update laundry status');
+        }
+  
+        setLaundryData(updatedLaundryData);
+        toast.success(`Status updated for ${updatedLaundryData[index].hostelName}`);
+      } catch (error) {
+        console.error('Error updating status:', error.message);
+        toast.error('Error updating status');
+      }
+    };
+  
+    const handleSendMessage = async () => {
+      if (!messageHostel || !adminMessage) {
+        toast.error('Please select a hostel and enter a message!');
+        return;
+      }
+  
+      try {
+        await fetch(`${backendURL}/sendMessageToHostel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hostelName: messageHostel,
+            message: adminMessage,
+            adminEmail: userId,
+          }),
+        });
+  
+        toast.success(`Message sent to ${messageHostel}: ${adminMessage}`);
+        setMessageHostel('');
+        setAdminMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error.message);
+        toast.error('Error sending message');
+      }
+    };
   
 
 
-  const handleSendMessage = async () => {
-    // Check if required fields are filled
-    if (!messageHostel || !adminMessage) {
-      toast.error("Please select a hostel and enter a message!", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
-      return;
-    }
-  
-    try {
-      // Send request to backend
-      await fetch(`${backendURL}/sendMessageToHostel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          hostelName: messageHostel,
-          message: adminMessage,
-          adminEmail: userId,
-        }),
-      });
-  
-      // Show success message
-      toast.success(`Message sent to ${messageHostel}: ${adminMessage}`, {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
-  
-      // Clear message input fields after sending
-      setMessageHostel("");
-      setAdminMessage("");
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error("Error sending message", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          fontSize: "18px",
-          padding: "20px",
-        },
-      });
-    }
-  };
   
   const renderFiltersAndSort = () => (
     <div className="mb-3 d-flex justify-content-between align-items-center">

@@ -114,7 +114,7 @@ app.post('/submitLaundry', (req, res) => {
   // Formatting the date
   const laundryDate = new Date().toLocaleDateString();
   const formattedDate = moment(laundryDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
-  const editStatus = 'Received bag'; // Initial status
+  const editStatus = 'Submitted'; // Initial status
 
   // Query to insert laundry instance into database
   const instanceInsertQuery = `
@@ -155,7 +155,7 @@ app.get('/getLaundry/:rollNo', (req, res) => {
 
   // Query to fetch laundry history for the student
   const laundryQuery = `
-    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Received_Date, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
+    SELECT li.Instance_ID, li.Received_Date, li.Clothes_Given, li.Return_Date, li.Edit_Status, s.Email AS studentEmail, h.Hostel_Name
     FROM Laundry_Instance li
     JOIN Laundry_Assignment la ON li.Bag_ID = la.Bag_ID
     JOIN Student s ON la.Roll_No = s.Roll_No
@@ -223,6 +223,8 @@ app.get('/getComplaints', (req, res) => {
       res.json(results);
     });
   });
+
+
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -405,6 +407,18 @@ app.post("/postLaundryInfo", (req, res) => {
       }
     }
   );
+});
+
+
+
+// Update Laundry Status
+app.put('/updateLaundryStatus', (req, res) => {
+  const { bagId, status } = req.body;
+  const sql = `UPDATE Laundry_Instance SET Edit_Status = '${status}' WHERE Bag_ID = '${bagId}'`;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send('Laundry status updated successfully');
+  });
 });
 
 // Endpoint to send admin message
