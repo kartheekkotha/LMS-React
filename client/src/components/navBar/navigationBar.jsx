@@ -67,7 +67,7 @@ const NavigationBar = ({ isLoggedIn, userId, userRole, onLogout }) => {
                     </li>
                     <li className="nav-item">
                       <Link className="nav-link" to="/adminAnnouncements">
-                        Messages for Students
+                      Announcements
                       </Link>
                     </li>
                   </>

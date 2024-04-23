@@ -148,25 +148,13 @@ app.post('/submitLaundry', (req, res) => {
 });
 
 
-
 // Endpoint to submit a complaint
 app.post("/submitComplaint", (req, res) => {
   const { complaintText, rollNo } = req.body;
-
-  if (!complaintText || !rollNo) {
-    return res.status(400).json({ message: 'Invalid request. Missing data.' });
-  }
-
-  // Simulating submission of complaint
-  const complaintDate = new Date().toLocaleDateString();
-   // Get current date in YYYY-MM-DD format
-  const newComplaint = {
-    complaintText,
-    complaintDate,
-    rollNo,
-  };
+  console.log(complaintText, rollNo); 
 
   // Store complaint in the database
+  let formattedDate = new Date().toISOString().split('T')[0];
   connection.query(
     'INSERT INTO StudentComplaint (Description, Date, Roll_No) VALUES (?, ?, ?)',
     [complaintText, formattedDate, rollNo],
@@ -176,10 +164,12 @@ app.post("/submitComplaint", (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
       }
 
-      res.status(200).json({ message: 'Complaint submitted successfully', complaint: newComplaint });
+      res.status(200).json({ message: 'Complaint submitted successfully' });
     }
   );
 });
+
+
 // Endpoint to get complaints
 app.get('/getComplaints', (req, res) => {
     const query = 'SELECT * FROM StudentComplaint';
