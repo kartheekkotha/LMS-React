@@ -386,27 +386,59 @@ app.post("/postLaundryInfo", (req, res) => {
 
 
 // Update Laundry Status
-app.put('/updateLaundryStatus', (req, res) => {
-  const { bagId, status } = req.body;
-  const sql = `UPDATE Laundry_Instance SET Edit_Status = '${status}' WHERE Bag_ID = '${bagId}'`;
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.error('Error updating laundry status:', err);
-      res.status(500).json({ error: 'Failed to update laundry status' });
+app.put('/updateLaundryStatusAndReturnDate', (req, res) => {
+  const { instanceId, status } = req.body;
+  let returnDate = null;
+
+  // If status is "Ready to collect", set the return date to the current date
+  if (status === 'Ready to Collect') {
+    returnDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+  }
+  console.log(instanceId, status, returnDate)
+  // Update Laundry_Instance table
+  const updateQuery = `
+    UPDATE Laundry_Instance
+    SET Edit_Status = ?,
+        Return_Date = ?
+    WHERE Instance_ID = ?;
+  `;
+
+  connection.query(updateQuery, [status, returnDate, instanceId], (error, results) => {
+    if (error) {
+      console.error('Error updating laundry status and return date:', error);
+      res.status(500).json({ error: 'Internal server error' });
       return;
     }
-    
-    // Fetch the updated laundry data after updating the status
-    const fetchSql = `SELECT * FROM Laundry_Instance WHERE Bag_ID = '${bagId}'`;
-    db.query(fetchSql, (fetchErr, fetchResult) => {
-      if (fetchErr) {
-        console.error('Error fetching updated laundry data:', fetchErr);
-        res.status(500).json({ error: 'Failed to fetch updated laundry data' });
-        return;
-      }
-      
-      res.json(fetchResult); // Return the updated laundry data
-    });
+
+    // If status is "Ready to collect", update laundry_status in Student table
+    if (status === 'Ready to Collect') {
+      const updateStudentQuery = `
+        UPDATE Student
+        SET laundry_status = FALSE
+        WHERE Roll_No = (
+          SELECT Roll_No
+          FROM Laundry_Assignment
+          WHERE Bag_ID = (
+            SELECT Bag_ID
+            FROM Laundry_Instance
+            WHERE Instance_ID = ?
+          )
+        );
+      `;
+
+      connection.query(updateStudentQuery, [instanceId], (studentError, studentResults) => {
+        if (studentError) {
+          console.error('Error updating student laundry status:', studentError);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        
+        res.status(200).json({ message: 'Laundry status and return date updated successfully' });
+      });
+    } else {
+      res.status(200).json({ message: 'Laundry status and return date updated successfully' });
+    }
   });
 });
 

@@ -108,34 +108,40 @@ const AdminPortal = ({ isLoggedIn, userId , userRole}) => {
       }
      };
   
-    const handleEditStatus = async (index, newStatus) => {
+     const handleEditStatus = async (index, newStatus) => {
       try {
         const updatedLaundryData = [...laundryData];
-        updatedLaundryData[index].status = newStatus;
-  
-        const response = await fetch(`${backendURL}/updateLaundryStatus`, {
+        updatedLaundryData[index].Edit_Status = newStatus;
+    
+        const response = await fetch(`${backendURL}/updateLaundryStatusAndReturnDate`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            bagId: updatedLaundryData[index].bag_id,
+            instanceId: updatedLaundryData[index].Instance_ID,
             status: newStatus,
           }),
         });
-  
+    
         if (!response.ok) {
-          throw new Error('Failed to update laundry status');
+          throw new Error('Failed to update laundry status and return date');
         }
-  
+    
+        // If status is "Ready to Collect", update the received date in the frontend
+        if (newStatus === 'Ready to Collect') {
+          const currentDate = new Date().toISOString().split('T')[0];
+          updatedLaundryData[index].Return_Date = currentDate;
+        }
+    
         setLaundryData(updatedLaundryData);
-        toast.success(`Status updated for ${updatedLaundryData[index].hostelName}`);
+        toast.success(`Status updated for ${updatedLaundryData[index].Assigned_Hostel_ID}`);
       } catch (error) {
-        console.error('Error updating status:', error.message);
-        toast.error('Error updating status');
+        console.error('Error updating status and return date:', error.message);
+        toast.error('Error updating status and return date');
       }
     };
-  
+    
     const handleSendMessage = async () => {
       if (!messageHostel || !adminMessage) {
         toast.error('Please select a hostel and enter a message!');
@@ -201,10 +207,11 @@ const renderLaundryTable = () => {
       const valueB = b[sortBy];
 
       if (sortOrder === "asc") {
-        return valueA.localeCompare(valueB, undefined, { numeric: true });
+        return valueA.toString().localeCompare(valueB.toString(), undefined, { numeric: true });
       } else {
-        return valueB.localeCompare(valueA, undefined, { numeric: true });
+        return valueB.toString().localeCompare(valueA.toString(), undefined, { numeric: true });
       }
+      
     });
   }
 
@@ -256,7 +263,7 @@ const renderLaundryTable = () => {
                     </select>
                   </div>
                 </td>
-                <td>{entry.returnDate}</td>
+                <td>{entry.Return_Date}</td>
               </tr>
             ))}
           </tbody>
