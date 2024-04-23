@@ -183,9 +183,10 @@ const renderLaundryTable = () => {
 
   if (filterHostel) {
     filteredData = filteredData.filter(
-      (entry) => entry.Assigned_Hostel_ID === filterHostel
+      (entry) => entry.Assigned_Hostel_ID == filterHostel
     );
   }
+
 
   if (filterDate) {
     // Convert filterDate and entry.Received_Date to the same format before comparison
@@ -244,7 +245,7 @@ const renderLaundryTable = () => {
                   {entry.studentEmail}
                 </td>
                 <td>{entry.Clothes_Given}</td>
-                <td style={{ backgroundColor: getStatusColor(entry.status) }}>
+                <td style={{ backgroundColor: getStatusColor(entry.Edit_Status) }}>
                   {entry.Edit_Status}
                 </td>
                 <td>
@@ -254,7 +255,7 @@ const renderLaundryTable = () => {
                       onChange={(e) =>
                         handleEditStatus(index, e.target.value)
                       }
-                      value={entry.status}
+                      value={entry.Edit_Status}
                     >
                       <option value="Received">Received</option>
                       <option value="Washing">Washing</option>
@@ -263,7 +264,7 @@ const renderLaundryTable = () => {
                     </select>
                   </div>
                 </td>
-                <td>{entry.Return_Date}</td>
+                <td>{formatDate(entry.Return_Date)}</td>
               </tr>
             ))}
           </tbody>
@@ -400,7 +401,7 @@ const renderFiltersAndSort = () => (
       case "Received":
         return "#97b9fc";
       case "Washing":
-        return "lightorange";
+        return "orange";
       case "Drying":
         return "lightyellow";
       case "Ready to Collect":
