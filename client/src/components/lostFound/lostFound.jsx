@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./lostFound.css";
 import AddImage from "../../assets/img/add-image.jpeg";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
@@ -56,8 +58,8 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
     }
 
     // Check if all required fields are filled
-    if (!currentItem.description || !selectedImage || !currentItem.email) {
-      alert("Please fill in description, image upload, and email.");
+    if (!currentItem.description || !selectedImage) {
+      alert("Please fill in description and image upload.");
       return;
     }
 
@@ -69,7 +71,7 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
     formData.append('phNo', studentDetails.Phone_No);
     formData.append('hostelId', studentDetails.Hostel_ID);
     formData.append('roomNo', studentDetails.Room_No);
-    formData.append('email', currentItem.email);
+    formData.append('email', studentDetails.Student_Email);
     formData.append('image', selectedImage);
     formData.append('rollNo', studentDetails.Roll_No);
 
@@ -90,6 +92,8 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
         } else {
           setFoundItems([data, ...foundItems]);
         }
+        toast.success("Image posted successfully to Lost & Found!");
+
       } else {
         throw new Error("Failed to post item");
       }
@@ -119,6 +123,11 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
       .catch((error) => console.error("Error fetching found items:", error));
   }, []);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
   const renderPosts = (items) => {
     return (
       <div>
@@ -132,10 +141,10 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
             <div className="card-body">
               <p className="card-text">{item.Description}</p>
               <p className="card-text">
-                <small className="text-muted">{item.Date}</small>
+                <small className="text-muted">{formatDate(item.Date)}</small>
               </p>
               <p className="card-text">
-                <small className="text-muted">Posted By : {item.Roll_No}</small>
+                <small className="text-muted">Posted By : {item.Student_Email}</small>
               </p>
               <p className="card-text">
                 <small className="text-muted">Contact: {item.Ph_No}</small>
@@ -233,8 +242,8 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
               </label>
             </div>
           </div>
-          <div className="mb-3">
-            <label htmlFor="itemEmail">Email:</label>
+          {/* <div className="mb-3">
+          <label htmlFor="itemEmail">Email:</label>
             <input
               type="email"
               className="form-control"
@@ -243,11 +252,12 @@ const LostAndFound = ({ isLoggedIn, userId , userRole}) => {
               value={currentItem.email}
               onChange={handleInputChange}
             />
-          </div>
+          </div> */}
           <button className="btn btn-post" onClick={handlePost}>
             Post Item
           </button>
         </div>
+        <ToastContainer />
       </div>
     </div>
   );

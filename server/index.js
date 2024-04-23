@@ -350,7 +350,13 @@ app.post('/postFoundItem', upload.single('image'), (req, res) => {
 
 // Endpoint for fetching lost items
 app.get('/getLostItems', (req, res) => {
-  const sql = 'SELECT Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No FROM LostAndFound WHERE Lost_Found = "Lost" ORDER BY Date DESC';
+  const sql = `
+  SELECT l.Date, l.Description, l.Ph_No, l.Hostel_ID, l.Room_No, l.Lost_Found, l.Image_URL, l.Roll_No, s.Email AS Student_Email
+  FROM LostAndFound l
+  JOIN Student s ON l.Roll_No = s.Roll_No
+  WHERE l.Lost_Found = 'Lost'
+  ORDER BY l.Date DESC;
+  `;
   connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching lost items:', err);
@@ -368,8 +374,15 @@ app.get('/getLostItems', (req, res) => {
 
 // Endpoint for fetching found items
 app.get('/getFoundItems', (req, res) => {
-  const sql = 'SELECT Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No FROM LostAndFound WHERE Lost_Found = "Found" ORDER BY Date DESC';
-  connection.query(sql, (err, results) => {
+  const sql = 
+  `
+  SELECT l.Date, l.Description, l.Ph_No, l.Hostel_ID, l.Room_No, l.Lost_Found, l.Image_URL, l.Roll_No, s.Email AS Student_Email
+  FROM LostAndFound l
+  JOIN Student s ON l.Roll_No = s.Roll_No
+  WHERE l.Lost_Found = 'Found'
+  ORDER BY l.Date DESC;
+  `;
+    connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching lost items:', err);
       res.status(500).send('Internal Server Error');
