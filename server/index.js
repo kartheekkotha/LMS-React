@@ -448,8 +448,7 @@ app.post('/sendMessageToHostel', (req, res) => {
   console.log(hostelName, message, adminEmail);   
       // Insert admin message into AdminMessage table
       const insertQuery = 'INSERT INTO AdminMessage (Date, Description, Hostel_ID, Admin_Email) VALUES (?, ?, ?, ?)';
-      const complaintDate = new Date().toLocaleDateString();
-      const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');    
+      let formattedDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
       connection.query(insertQuery, [formattedDate, message, hostelName, adminEmail], (error, results) => {
           if (error) {
             console.log("Ir is a error message")
