@@ -459,33 +459,36 @@ app.get('/getLaundry/:rollNo', (req, res) => {
 
 
 // Endpoint to fetch student details by email
-app.get('/getStudentDetailsByEmail/:studentEmail', (req, res) => {
+app.get('/getStudentDetailsByEmail/:studentEmail/:laundryBagID/:instanceID', (req, res) => {
   const email = req.params.studentEmail;
-  console.log("Requesting user details , " ,email);
+  const bagID = req.params.laundryBagID;
+  const instanceID = req.params.instanceID
+  console.log("Requesting user details , " ,email , bagID, instanceID);
   const query = `
-    SELECT 
-      s.Roll_No, 
-      s.Hostel_ID, 
-      s.Room_No,
-      s.Phone_No,
-      s.Name,
-      s.Email AS Student_Email,
-      la.Bag_ID AS Laundry_Bag_ID,
-      li.Student_Message AS Laundry_Message,
-    h.Hostel_Name
-    FROM 
-      Student s
-    JOIN 
-      Laundry_Assignment la ON s.Roll_No = la.Roll_No
-    JOIN 
-      Laundry_Instance li ON la.Bag_ID = li.Bag_ID
-    JOIN 
-      Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
-    WHERE 
-      s.Email = ?
+  SELECT 
+  s.Roll_No, 
+  s.Hostel_ID, 
+  s.Room_No,
+  s.Phone_No,
+  s.Name,
+  s.Email AS Student_Email,
+  la.Bag_ID AS Laundry_Bag_ID,
+  li.Instance_ID AS Instance_ID,
+  li.Student_Message AS Laundry_Message,
+  h.Hostel_Name
+FROM 
+  Student s
+JOIN 
+  Laundry_Assignment la ON s.Roll_No = la.Roll_No
+JOIN 
+  Laundry_Instance li ON la.Bag_ID = li.Bag_ID
+JOIN 
+  Hostel h ON li.Assigned_Hostel_ID = h.Hostel_ID
+WHERE 
+  s.Email = ? AND la.Bag_ID = ? AND li.Instance_ID = ?; 
   `;
 
-  connection.query(query, [email], (error, results) => {
+  connection.query(query, [email,  bagID, instanceID], (error, results) => {
     if (error) {
       console.log("couldn't fetch")
       console.error('Error fetching student details:', error);

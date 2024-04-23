@@ -417,11 +417,13 @@ const renderFiltersAndSort = () => (
 
   const handleViewDetails = async (entry, index) => {
     const studentEmail = entry.studentEmail; // Get the student email from the clicked entry
-  
+    const laundryBagID = entry.Bag_ID; // Get the laundry bag ID from the clicked entry
+    const instanceID = entry.Instance_ID; // Get the instance ID from the clicked entry
+
     try {
       // Fetch student details from the backend using the student email
-      console.log("Fetching student details for email:", studentEmail);
-      const response = await fetch(`${backendURL}/getStudentDetailsByEmail/${studentEmail}`);
+      console.log("Fetching student details for email:", studentEmail , laundryBagID, instanceID);
+      const response = await fetch(`${backendURL}/getStudentDetailsByEmail/${studentEmail}/${laundryBagID}/${instanceID}`);
       if (response.ok) {
         const studentDetails = await response.json();
         // Render student details in a table
@@ -433,7 +435,7 @@ const renderFiltersAndSort = () => (
             <td>{studentDetails.Hostel_Name}</td>
             <td>{studentDetails.Room_No}</td>
             <td>{studentDetails.Phone_No}</td>
-            <td>{studentDetails.Student_Message}</td>
+            <td>{studentDetails.Laundry_Message}</td>
           </tr>
         );
         console.log("student details: ",details);
