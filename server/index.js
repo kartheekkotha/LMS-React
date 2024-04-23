@@ -227,89 +227,124 @@ const folderId = '1OVYVH13cOvF73dM2O0N-IvzYAMfiHbwp'; // Replace 'YOUR_FOLDER_ID
 
 // Route for posting lost items with image upload to Google Drive
 app.post('/postLostItem', upload.single('image'), (req, res) => {
-  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
-  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
-
-  const fileMetadata = {
-    name: req.file.filename,
-    parents: [folderId] // Specify the folder ID as the parent
-  };
-  const media = {
-    mimeType: req.file.mimetype,
-    body: fs.createReadStream(req.file.path)
-  };
-
-  drive.files.create({
-    resource: fileMetadata,
-    fields: 'id, webViewLink'
-  }, (err, response) => {
-    if (err) {
-      console.error('Error uploading image to Google Drive:', err);
-      res.status(500).send('Internal Server Error while creating google image link');
-      return;
+  try {
+    // Validate required fields
+    const { date, description, phNo, hostelId, roomNo, rollNo } = req.body;
+    if (!date || !description || !phNo || !hostelId || !roomNo || !rollNo) {
+      throw new Error('Required fields are missing.');
     }
 
-    // Get the file ID from the response
-    const fileId = response.data.id;
-    const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
+    // Format date
+    const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
 
-    // Insert the image URL into your database or perform any necessary operations
-    // For demonstration purposes, let's assume you're inserting it into a table named 'LostAndFound'
-    const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-    connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', webViewLink, rollNo], (err, result) => {
+    // Check if file is attached
+    if (!req.file) {
+      throw new Error('No image file attached.');
+    }
+
+    // Upload image to Google Drive
+    const fileMetadata = {
+      name: req.file.filename,
+      parents: [folderId] // Specify the folder ID as the parent
+    };
+    const media = {
+      mimeType: req.file.mimetype,
+      body: fs.createReadStream(req.file.path)
+    };
+
+    drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id, webViewLink'
+    }, async (err, response) => {
       if (err) {
-        console.error('Error posting lost item:', err);
-        res.status(500).send(`Internal Server Error but link of drive image is ${webViewLink}`);
-      } else {
-        res.status(201).json({ message: 'Lost item posted successfully' });
+        console.error('Error uploading image to Google Drive:', err);
+        fs.unlinkSync(req.file.path); // Delete the temporary file
+        res.status(500).send('Internal Server Error while creating google image link');
+        return;
       }
+
+      // Get the file ID from the response
+      const fileId = response.data.id;
+      const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
+
+      // Insert data into the database
+      const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Lost', webViewLink, rollNo], (err, result) => {
+        fs.unlinkSync(req.file.path); // Delete the temporary file
+        if (err) {
+          console.error('Error posting lost item:', err);
+          res.status(500).send(`Internal Server Error but link of drive image is ${webViewLink}`);
+        } else {
+          res.status(201).json({ message: 'Lost item posted successfully' });
+        }
+      });
     });
-  });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(400).send('Bad Request');
+  }
 });
 
 // Endpoint to post a found item with image upload
 app.post('/postFoundItem', upload.single('image'), (req, res) => {
-  const { date, description, phNo, hostelId, roomNo, email, rollNo } = req.body;
-  const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
-  const imageUrl = req.file.path; // Retrieve uploaded image path
-
-  // Upload image to Google Drive
-  const fileMetadata = {
-    name: req.file.filename,
-    parents: [folderId] // Specify the folder ID as the parent
-  };
-  const media = {
-    mimeType: req.file.mimetype,
-    body: fs.createReadStream(req.file.path)
-  };
-
-  drive.files.create({
-    resource: fileMetadata,
-    media: media,
-    fields: 'id, webViewLink'
-  }, (err, response) => {
-    if (err) {
-      console.error('Error uploading image to Google Drive:', err);
-      res.status(500).send('Internal Server Error');
-      return;
+  try {
+    // Validate required fields
+    const { date, description, phNo, hostelId, roomNo, rollNo } = req.body;
+    if (!date || !description || !phNo || !hostelId || !roomNo || !rollNo) {
+      throw new Error('Required fields are missing.');
     }
 
-    // Get the file ID from the response
-    const fileId = response.data.id;
+    // Format date
+    const formattedDate = moment(date, 'DD-MM-YYYY').format('YYYY-MM-DD');
 
-    // Construct the image URL from the file ID
-    const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
-
-  const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Found', webViewLink, rollNo], (err, result) => {
-    if (err) {
-      console.error('Error posting lost item:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.status(201).json({ message: 'Lost item posted successfully' });
+    // Check if file is attached
+    if (!req.file) {
+      throw new Error('No image file attached.');
     }
-  });
-});
+
+    // Upload image to Google Drive
+    const fileMetadata = {
+      name: req.file.filename,
+      parents: [folderId] // Specify the folder ID as the parent
+    };
+    const media = {
+      mimeType: req.file.mimetype,
+      body: fs.createReadStream(req.file.path)
+    };
+
+    drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id, webViewLink'
+    }, async (err, response) => {
+      if (err) {
+        console.error('Error uploading image to Google Drive:', err);
+        fs.unlinkSync(req.file.path); // Delete the temporary file
+        res.status(500).send('Internal Server Error');
+        return;
+      }
+
+      // Get the file ID from the response
+      const fileId = response.data.id;
+      const webViewLink = `https://drive.google.com/file/d/${fileId}/preview`
+
+      // Insert data into the database
+      const sql = 'INSERT INTO LostAndFound (Date, Description, Ph_No, Hostel_ID, Room_No, Lost_Found, Image_URL, Roll_No) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      connection.query(sql, [formattedDate, description, phNo, hostelId, roomNo, 'Found', webViewLink, rollNo], (err, result) => {
+        fs.unlinkSync(req.file.path); // Delete the temporary file
+        if (err) {
+          console.error('Error posting found item:', err);
+          res.status(500).send('Internal Server Error');
+        } else {
+          res.status(201).json({ message: 'Found item posted successfully' });
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(400).send('Bad Request');
+  }
 });
 
 
