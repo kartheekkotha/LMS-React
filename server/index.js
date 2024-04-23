@@ -390,8 +390,23 @@ app.put('/updateLaundryStatus', (req, res) => {
   const { bagId, status } = req.body;
   const sql = `UPDATE Laundry_Instance SET Edit_Status = '${status}' WHERE Bag_ID = '${bagId}'`;
   db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.send('Laundry status updated successfully');
+    if (err) {
+      console.error('Error updating laundry status:', err);
+      res.status(500).json({ error: 'Failed to update laundry status' });
+      return;
+    }
+    
+    // Fetch the updated laundry data after updating the status
+    const fetchSql = `SELECT * FROM Laundry_Instance WHERE Bag_ID = '${bagId}'`;
+    db.query(fetchSql, (fetchErr, fetchResult) => {
+      if (fetchErr) {
+        console.error('Error fetching updated laundry data:', fetchErr);
+        res.status(500).json({ error: 'Failed to fetch updated laundry data' });
+        return;
+      }
+      
+      res.json(fetchResult); // Return the updated laundry data
+    });
   });
 });
 
@@ -453,6 +468,7 @@ app.get('/getStudentDetailsByEmail/:studentEmail', (req, res) => {
       s.Hostel_ID, 
       s.Room_No,
       s.Phone_No,
+      s.Name,
       s.Email AS Student_Email,
       la.Bag_ID AS Laundry_Bag_ID,
       li.Student_Message AS Laundry_Message,

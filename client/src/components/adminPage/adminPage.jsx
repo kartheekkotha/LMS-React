@@ -428,27 +428,28 @@ const renderFiltersAndSort = () => (
         console.log("Student details:", studentDetails);
         const details = (
           <tr>
+            <td>{studentDetails.Name}</td>
             <td>{studentDetails.Student_Email}</td>
             <td>{studentDetails.Hostel_Name}</td>
             <td>{studentDetails.Room_No}</td>
             <td>{studentDetails.Phone_No}</td>
-            <td>{studentDetails.Laundry_Message}</td>
+            <td>{studentDetails.Student_Message}</td>
           </tr>
         );
         console.log("student details: ",details);
         // Show details in a new table
         toast.info(
           <div>
-            <h3 className="toast-title">Student Details</h3>
+            <h3 className="toast-title" style={{ marginLeft: "0px", marginBottom: "20px" }}>Student Details</h3>
             <table className="table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Hostel</th>
-                  <th>Room</th>
-                  <th>Phone</th>
-                  <th>Note</th>
+                <th style={{ padding: "3px" }}>Name</th>
+                <th style={{ padding: "3px" }}>Email</th>
+                <th style={{ padding: "3px" }}>Hostel</th>
+                <th style={{ padding: "3px" }}>Room</th>
+                <th style={{ padding: "3px" }}>Phone</th>
+                <th style={{ padding: "3px" }}>Note</th>
                 </tr>
               </thead>
               <tbody>{details}</tbody>
@@ -463,12 +464,12 @@ const renderFiltersAndSort = () => (
             draggable: true,
             progress: undefined,
             style: {
-              marginTop: "100px",
-              marginLeft: "300px",
-              fontSize: "18px",
-              padding: "10px",
-              height: "400px",
-              width: "1000px",
+              marginTop: "60px",
+              marginLeft: "200px",
+              fontSize: "15px",
+              padding: "5px",
+              height: "250px",
+              width: "1100px",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
               borderRadius: "5px",
             },
