@@ -444,14 +444,19 @@ app.get('/getLaundry/:rollNo', (req, res) => {
 
 
 // Endpoint to fetch student details by email
-app.get('/getStudentDetailsByEmail', (req, res) => {
-  const email = req.params.email;
-
+app.get('/getStudentDetailsByEmail/:studentEmail', (req, res) => {
+  const email = req.params.studentEmail;
+  console.log("Requesting user details , " ,email);
   const query = `
     SELECT 
-      s.*, 
-      li.Student_Message,
-      h.Hostel_Name
+      s.Roll_No, 
+      s.Hostel_ID, 
+      s.Room_No,
+      s.Phone_No,
+      s.Email AS Student_Email,
+      la.Bag_ID AS Laundry_Bag_ID,
+      li.Student_Message AS Laundry_Message,
+    h.Hostel_Name
     FROM 
       Student s
     JOIN 
@@ -466,6 +471,7 @@ app.get('/getStudentDetailsByEmail', (req, res) => {
 
   connection.query(query, [email], (error, results) => {
     if (error) {
+      console.log("couldn't fetch")
       console.error('Error fetching student details:', error);
       res.status(500).json({ error: 'Internal server error' });
       return;
@@ -475,8 +481,7 @@ app.get('/getStudentDetailsByEmail', (req, res) => {
       res.status(404).json({ error: 'Student not found' });
       return;
     }
-
-    res.json(results[0]); // Assuming email is unique, so only one result is expected
+    res.status(200).json(results[0]); // Assuming email is unique, so only one result is expected
   });
 });
 

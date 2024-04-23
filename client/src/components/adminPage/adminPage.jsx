@@ -420,25 +420,19 @@ const renderFiltersAndSort = () => (
   
     try {
       // Fetch student details from the backend using the student email
-      const response = await fetch(`${backendURL}/getStudentDetailsByEmail`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: studentEmail }),
-      });
-  
+      console.log("Fetching student details for email:", studentEmail);
+      const response = await fetch(`${backendURL}/getStudentDetailsByEmail/${studentEmail}`);
       if (response.ok) {
-        const { studentDetails } = await response.json();
+        const studentDetails = await response.json();
         // Render student details in a table
+        console.log("Student details:", studentDetails);
         const details = (
           <tr>
-            <td>{studentDetails.Name}</td>
-            <td>{studentDetails.Email}</td>
+            <td>{studentDetails.Student_Email}</td>
             <td>{studentDetails.Hostel_Name}</td>
             <td>{studentDetails.Room_No}</td>
             <td>{studentDetails.Phone_No}</td>
-            <td>{studentDetails.Student_Message}</td>
+            <td>{studentDetails.Laundry_Message}</td>
           </tr>
         );
         console.log("student details: ",details);
