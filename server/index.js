@@ -159,7 +159,7 @@ app.post("/submitComplaint", (req, res) => {
 
   // Simulating submission of complaint
   const complaintDate = new Date().toLocaleDateString();
-  const formattedDate = moment(complaintDate, 'DD-MM-YYYY').format('YYYY-MM-DD');
+  let formattedDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
   const newComplaint = {
     complaintText,
     formattedDate,
