@@ -264,7 +264,7 @@ const renderLaundryTable = () => {
                     </select>
                   </div>
                 </td>
-                <td>{formatDate(entry.Return_Date)}</td>
+                <td>{entry.Return_Date ? formatDate(entry.Return_Date) : 'None'}</td>
               </tr>
             ))}
           </tbody>

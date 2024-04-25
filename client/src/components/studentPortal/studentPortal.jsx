@@ -43,6 +43,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
       const response = await fetch(`${backendURL}/getLaundry/${rollNo}`);
       if (response.ok) {
         const { laundryHistory } = await response.json();
+        console.log("Laundry History:", laundryHistory);
         setLaundryHistory(laundryHistory);
       } else {
         throw new Error("Failed to fetch laundry history");
@@ -266,7 +267,7 @@ const StudentPortal = ({ isLoggedIn, userId, userRole }) => {
                 <td style={{ color: getStatusColor(entry.Edit_Status) }}>
                   {entry.Edit_Status}
                 </td>
-                <td>{formatDate(entry.Return_Date)}</td>
+                <td>{entry.Return_Date ? formatDate(entry.Return_Date) : 'None'}</td>
               </tr>
             ))}
           </tbody>
