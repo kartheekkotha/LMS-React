@@ -1,4 +1,17 @@
-# Getting Started with Create React App
+#Laundry Management System
+#Software Engineering Project - CSD 326
+
+The current state of college laundry services often leaves much to be desired, with students
+facing various inconveniences due to a lack of structure and efficient communication channels.
+This results in challenges such as an information gap, inefficient communication methods, limited feedback channels, and difficulties in managing lost and found items. To address these
+issues, there is a pressing need for a comprehensive solution that enhances the overall management of student laundry services.
+
+The proposed system aims to tackle these challenges head-on by offering a robust platform for managing laundry services tailored specifically to the needs of college students. By implementing features such as secure login and user authentication, a student laundry portal, a lost and found page, a complaint box, admin views for laundry management, and efficient communication channels, the system endeavors to streamline and enhance the laundry experience for both students and administrators.
+
+This introduction sets the stage for discussing the goals and objectives of the proposed system, which are centered around addressing the identified challenges and improving the overall efficiency, transparency, and user experience of college laundry services. Through careful design and implementation, the system aims to mitigate existing issues while providing students with a seamless and convenient laundry management solution.
+
+
+# Information on running the Code
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
