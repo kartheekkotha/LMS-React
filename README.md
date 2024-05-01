@@ -1,5 +1,6 @@
-#Laundry Management System
-#Software Engineering Project - CSD 326
+# Laundry Management System
+
+# Software Engineering Project - CSD 326
 
 The current state of college laundry services often leaves much to be desired, with students
 facing various inconveniences due to a lack of structure and efficient communication channels.
